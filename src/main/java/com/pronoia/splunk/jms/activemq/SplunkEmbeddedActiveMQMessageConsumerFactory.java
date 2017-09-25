@@ -97,33 +97,22 @@ public class SplunkEmbeddedActiveMQMessageConsumerFactory extends SplunkEmbedded
     String destinationName = mbeanName.getKeyProperty("destinationName");
     boolean useTopic = ("Topic".equals(mbeanName.getKeyProperty("destinationType"))) ? true : false;
 
-    SplunkJmsMessageConsumer newMessageConsumer = new SplunkJmsMessageConsumer(destinationName, useTopic);
+    SplunkActiveMqMessageConsumer newMessageConsumer = new SplunkActiveMqMessageConsumer(destinationName, useTopic);
 
     newMessageConsumer.setReceiveTimeoutMillis(receiveTimeoutMillis);
     newMessageConsumer.setInitialDelaySeconds(initialDelaySeconds);
     newMessageConsumer.setDelaySeconds(delaySeconds);
 
-    ActiveMQConnectionFactory tmpConnectionFactory = new ActiveMQConnectionFactory();
-    tmpConnectionFactory.setBrokerURL(String.format("vm://%s?create=false", mbeanName.getKeyProperty("brokerName")));
-
-    RedeliveryPolicy redeliveryPolicy = new RedeliveryPolicy();
-    redeliveryPolicy.setInitialRedeliveryDelay(1000);
-    redeliveryPolicy.setMaximumRedeliveryDelay(60000);
-    redeliveryPolicy.setBackOffMultiplier(1.5);
-    redeliveryPolicy.setUseExponentialBackOff(true);
-    redeliveryPolicy.setMaximumRedeliveries(-1);
-
-    tmpConnectionFactory.setRedeliveryPolicy(redeliveryPolicy);
+    newMessageConsumer.setBrokerURL(String.format("vm://%s?create=false", mbeanName.getKeyProperty("brokerName")));
 
     if (hasUserName()) {
-      tmpConnectionFactory.setUserName(userName);
+      newMessageConsumer.setUserName(userName);
     }
     if (hasPassword()) {
-      tmpConnectionFactory.setPassword(password);
+      newMessageConsumer.setPassword(password);
     }
 
-    newMessageConsumer.setConnectionFactory(tmpConnectionFactory);
-    newMessageConsumer.setMessageEventBuilder(splunkEventBuilder.duplicate());
+    newMessageConsumer.setSplunkEventBuilder(splunkEventBuilder.duplicate());
 
     newMessageConsumer.setSplunkClient(splunkClient);
 
