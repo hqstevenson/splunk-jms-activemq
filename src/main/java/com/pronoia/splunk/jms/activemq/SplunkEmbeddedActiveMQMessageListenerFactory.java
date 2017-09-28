@@ -105,6 +105,18 @@ public class SplunkEmbeddedActiveMQMessageListenerFactory extends SplunkEmbedded
       newMessageListener.setPassword(password);
     }
 
+    if (isUseRedelivery()) {
+      newMessageListener.setUseRedelivery(useRedelivery);
+      newMessageListener.setMaximumRedeliveries(maximumRedeliveries);
+      newMessageListener.setInitialRedeliveryDelay(initialRedeliveryDelay);
+      newMessageListener.setMaximumRedeliveryDelay(maximumRedeliveryDelay);
+
+      if (hasUseExponentialBackOff()) {
+        newMessageListener.setUseExponentialBackOff(useExponentialBackOff);
+        newMessageListener.setBackoffMultiplier(backoffMultiplier);
+      }
+    }
+
     newMessageListener.setSplunkEventBuilder(splunkEventBuilder.duplicate());
 
     newMessageListener.setSplunkClient(splunkClient);

@@ -103,6 +103,18 @@ public class SplunkEmbeddedActiveMQMessageConsumerFactory extends SplunkEmbedded
     newMessageConsumer.setInitialDelaySeconds(initialDelaySeconds);
     newMessageConsumer.setDelaySeconds(delaySeconds);
 
+    if (isUseRedelivery()) {
+      newMessageConsumer.setUseRedelivery(useRedelivery);
+      newMessageConsumer.setMaximumRedeliveries(maximumRedeliveries);
+      newMessageConsumer.setInitialRedeliveryDelay(initialRedeliveryDelay);
+      newMessageConsumer.setMaximumRedeliveryDelay(maximumRedeliveryDelay);
+
+      if (hasUseExponentialBackOff()) {
+        newMessageConsumer.setUseExponentialBackOff(useExponentialBackOff);
+        newMessageConsumer.setBackoffMultiplier(backoffMultiplier);
+      }
+    }
+
     newMessageConsumer.setBrokerURL(String.format("vm://%s?create=false", mbeanName.getKeyProperty("brokerName")));
 
     if (hasUserName()) {

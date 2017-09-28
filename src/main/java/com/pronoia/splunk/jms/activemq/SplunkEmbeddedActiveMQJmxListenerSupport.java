@@ -51,6 +51,15 @@ public abstract class SplunkEmbeddedActiveMQJmxListenerSupport implements Notifi
   String userName;
   String password;
 
+  boolean useRedelivery = true;
+
+  Boolean useExponentialBackOff = true;
+  Double backoffMultiplier = 2.0;
+
+  Long initialRedeliveryDelay = 1000L;
+  Long maximumRedeliveryDelay = 60000L;
+  Integer maximumRedeliveries = -1;
+
   String destinationType = DEFAULT_DESTINATION_TYPE;
   String destinationNamePattern = DEFAULT_DESTINATION_NAME_PATTERN;
 
@@ -93,6 +102,74 @@ public abstract class SplunkEmbeddedActiveMQJmxListenerSupport implements Notifi
 
   public void setPassword(String password) {
     this.password = password;
+  }
+
+  public boolean isUseRedelivery() {
+    return useRedelivery;
+  }
+
+  public void setUseRedelivery(boolean useRedelivery) {
+    this.useRedelivery = useRedelivery;
+  }
+
+  public boolean hasUseExponentialBackOff() {
+    return useExponentialBackOff != null;
+  }
+
+  public Boolean getUseExponentialBackOff() {
+    return useExponentialBackOff;
+  }
+
+  public void setUseExponentialBackOff(Boolean useExponentialBackOff) {
+    this.useExponentialBackOff = useExponentialBackOff;
+  }
+
+  public boolean hasBackoffMultiplier() {
+    return backoffMultiplier != null && backoffMultiplier > 1;
+  }
+
+  public Double getBackoffMultiplier() {
+    return backoffMultiplier;
+  }
+
+  public void setBackoffMultiplier(Double backoffMultiplier) {
+    this.backoffMultiplier = backoffMultiplier;
+  }
+
+  public boolean hasInitialRedeliveryDelay() {
+    return initialRedeliveryDelay != null && initialRedeliveryDelay > 0;
+  }
+
+  public Long getInitialRedeliveryDelay() {
+    return initialRedeliveryDelay;
+  }
+
+  public void setInitialRedeliveryDelay(Long initialRedeliveryDelay) {
+    this.initialRedeliveryDelay = initialRedeliveryDelay;
+  }
+
+  public boolean hasMaximumRedeliveryDelay() {
+    return maximumRedeliveryDelay != null && maximumRedeliveryDelay > 0;
+  }
+
+  public Long getMaximumRedeliveryDelay() {
+    return maximumRedeliveryDelay;
+  }
+
+  public void setMaximumRedeliveryDelay(Long maximumRedeliveryDelay) {
+    this.maximumRedeliveryDelay = maximumRedeliveryDelay;
+  }
+
+  public boolean hasMaximumRedeliveries() {
+    return maximumRedeliveries != null;
+  }
+
+  public Integer getMaximumRedeliveries() {
+    return maximumRedeliveries;
+  }
+
+  public void setMaximumRedeliveries(Integer maximumRedeliveries) {
+    this.maximumRedeliveries = maximumRedeliveries;
   }
 
   public boolean hasDestinationType() {
