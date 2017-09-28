@@ -4,9 +4,11 @@ import com.pronoia.splunk.jms.SplunkJmsMessageConsumer;
 import com.pronoia.splunk.jms.activemq.internal.ActiveMqBrokerUtils;
 
 import javax.jms.Connection;
+import javax.jms.ConnectionFactory;
 import javax.jms.JMSException;
 
 import org.apache.activemq.ActiveMQConnection;
+import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.RedeliveryPolicy;
 
 /**
@@ -142,51 +144,44 @@ public class SplunkActiveMqMessageConsumer extends SplunkJmsMessageConsumer {
   }
 
   @Override
+  public void setConnectionFactory(ConnectionFactory connectionFactory) {
+    if (useRedelivery && connectionFactory instanceof ActiveMQConnectionFactory) {
+      ActiveMQConnectionFactory activeMQConnectionFactory = (ActiveMQConnectionFactory) connectionFactory;
+      RedeliveryPolicy redeliveryPolicy = activeMQConnectionFactory.getRedeliveryPolicy();
+      if (redeliveryPolicy == null) {
+        redeliveryPolicy = new RedeliveryPolicy();
+        activeMQConnectionFactory.setRedeliveryPolicy(redeliveryPolicy);
+      }
+      if (hasInitialRedeliveryDelay()) {
+        redeliveryPolicy.setUseExponentialBackOff(useExponentialBackOff);
+      }
+
+      if (hasBackoffMultiplier()) {
+        redeliveryPolicy.setBackOffMultiplier(backoffMultiplier);
+      }
+
+      if (hasInitialRedeliveryDelay()) {
+        redeliveryPolicy.setInitialRedeliveryDelay(initialRedeliveryDelay);
+      }
+
+      if (hasMaximumRedeliveryDelay()) {
+        redeliveryPolicy.setMaximumRedeliveryDelay(maximumRedeliveryDelay);
+      }
+
+      if (hasMaximumRedeliveries()) {
+        redeliveryPolicy.setMaximumRedeliveries(maximumRedeliveries);
+      }
+    }
+    super.setConnectionFactory(connectionFactory);
+  }
+
+  @Override
   public void verifyConfiguration() {
     if (!hasBrokerURL()) {
       throw new IllegalStateException("ActiveMQ Broker URL must be specified");
     }
 
     super.verifyConfiguration();
-  }
-
-  @Override
-  protected boolean createConnection(boolean throwException) {
-    boolean answer = super.createConnection(throwException);
-
-    if (answer && useRedelivery && hasConnection()) {
-      Connection connection = getConnection();
-      if (connection instanceof ActiveMQConnection) {
-        ActiveMQConnection activeMQConnection = (ActiveMQConnection) connection;
-        try {
-          RedeliveryPolicy redeliveryPolicy = activeMQConnection.getRedeliveryPolicy();
-          if (hasInitialRedeliveryDelay()) {
-            redeliveryPolicy.setUseExponentialBackOff(useExponentialBackOff);
-          }
-
-          if (hasBackoffMultiplier()) {
-            redeliveryPolicy.setBackOffMultiplier(backoffMultiplier);
-          }
-
-          if (hasInitialRedeliveryDelay()) {
-            redeliveryPolicy.setInitialRedeliveryDelay(initialRedeliveryDelay);
-          }
-
-          if (hasMaximumRedeliveryDelay()) {
-            redeliveryPolicy.setMaximumRedeliveryDelay(maximumRedeliveryDelay);
-          }
-
-          if (hasMaximumRedeliveries()) {
-            redeliveryPolicy.setMaximumRedeliveries(maximumRedeliveries);
-          }
-        } catch (JMSException e) {
-          e.printStackTrace();
-        }
-
-      }
-    }
-
-    return answer;
   }
 
   @Override
