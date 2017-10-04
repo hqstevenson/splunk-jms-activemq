@@ -20,6 +20,10 @@ import org.apache.activemq.command.DataStructure;
 public class AdvisoryMessageEventBuilder extends JmsMessageEventBuilder {
   static final Pattern ADVISORY_TYPE_PATTERN = Pattern.compile("topic://ActiveMQ\\.Advisory\\.([^.]+)\\..*");
 
+  public AdvisoryMessageEventBuilder() {
+    setTimestampProperty(null);
+  }
+
   @Override
   public String getHostFieldValue() {
     return super.getHostFieldValue();
@@ -49,6 +53,7 @@ public class AdvisoryMessageEventBuilder extends JmsMessageEventBuilder {
         String brokerOutTime = advisoryMessage.getStringProperty("orignalBrokerOutTime");
         if (brokerOutTime != null && !brokerOutTime.isEmpty()) {
           long brokerTimestamp = Long.parseLong(brokerOutTime);
+
           this.setTimestamp(brokerTimestamp);
         } else {
           try {
