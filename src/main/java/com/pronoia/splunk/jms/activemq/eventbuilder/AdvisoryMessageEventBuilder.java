@@ -42,6 +42,29 @@ public class AdvisoryMessageEventBuilder extends JmsMessageEventBuilder {
 
   @Override
   public String getTimestampFieldValue() {
+    if (hasEventBody() && !hasTimestampProperty()) {
+      Message advisoryMessage = getEventBody();
+
+      try {
+
+        String brokerOutTime = advisoryMessage.getStringProperty("orignalBrokerOutTime");
+        if (brokerOutTime != null && !brokerOutTime.isEmpty()) {
+          return brokerOutTime;
+        }
+      } catch (JMSException jmsEx) {
+        log.warn("Ignoring exception encountered retrieving 'orignalBrokerOutTime' property", jmsEx);
+      }
+
+      try {
+        String brokerInTime = advisoryMessage.getStringProperty("orignalBrokerInTime");
+        if (brokerInTime != null && !brokerInTime.isEmpty()) {
+          return brokerInTime;
+        }
+      } catch (JMSException jmsEx) {
+        log.warn("Ignoring exception encountered retrieving 'orignalBrokerInTime' property", jmsEx);
+      }
+    }
+
     return super.getTimestampFieldValue();
   }
 
