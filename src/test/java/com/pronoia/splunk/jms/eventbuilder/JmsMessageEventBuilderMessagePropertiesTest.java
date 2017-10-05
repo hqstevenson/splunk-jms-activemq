@@ -17,6 +17,8 @@
 
 package com.pronoia.splunk.jms.eventbuilder;
 
+import com.pronoia.splunk.jms.activemq.eventbuilder.AdvisoryMessageEventBuilder;
+
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -26,11 +28,11 @@ import org.junit.Test;
  */
 @Ignore("JmsMessageEventBuilderMessagePropertiesTest not yet implemented")
 public class JmsMessageEventBuilderMessagePropertiesTest {
-  JmsMessageEventBuilder instance;
+  AdvisoryMessageEventBuilder instance;
 
   @Before
   public void setUp() throws Exception {
-    instance = new JmsMessageEventBuilder();
+    instance = new AdvisoryMessageEventBuilder();
   }
 
   /**

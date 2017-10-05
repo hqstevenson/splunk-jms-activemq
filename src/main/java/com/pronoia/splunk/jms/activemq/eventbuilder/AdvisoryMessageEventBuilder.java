@@ -4,6 +4,7 @@ import com.pronoia.splunk.eventcollector.EventBuilder;
 import com.pronoia.splunk.eventcollector.EventCollectorInfo;
 import com.pronoia.splunk.jms.eventbuilder.JmsMessageEventBuilder;
 
+import java.io.IOException;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
@@ -19,10 +20,6 @@ import org.apache.activemq.command.DataStructure;
 
 public class AdvisoryMessageEventBuilder extends JmsMessageEventBuilder {
   static final Pattern ADVISORY_TYPE_PATTERN = Pattern.compile("topic://ActiveMQ\\.Advisory\\.([^.]+)\\..*");
-
-  public AdvisoryMessageEventBuilder() {
-    setTimestampProperty(null);
-  }
 
   @Override
   public String getHostFieldValue() {
@@ -47,30 +44,28 @@ public class AdvisoryMessageEventBuilder extends JmsMessageEventBuilder {
   @Override
   public String getTimestampFieldValue() {
     if (hasEventBody() && !hasTimestampProperty()) {
-      Message advisoryMessage = getEventBody();
+      Message jmsMessage = getEventBody();
+      if (jmsMessage instanceof ActiveMQMessage) {
+        ActiveMQMessage advisoryMessage = (ActiveMQMessage) jmsMessage;
+        DataStructure dataStructure = advisoryMessage.getDataStructure();
+        if (dataStructure instanceof ActiveMQMessage) {
+          ActiveMQMessage advisedMessage = (ActiveMQMessage) dataStructure;
+          long timestampMillis = advisedMessage.getBrokerOutTime();
+          if (timestampMillis <= 0) {
+            timestampMillis = advisedMessage.getBrokerInTime();
+          }
 
-      try {
-        String brokerOutTime = advisoryMessage.getStringProperty("orignalBrokerOutTime");
-        if (brokerOutTime != null && !brokerOutTime.isEmpty()) {
-          long brokerTimestamp = Long.parseLong(brokerOutTime);
-
-          this.setTimestamp(brokerTimestamp);
-        } else {
-          try {
-            String brokerInTime = advisoryMessage.getStringProperty("orignalBrokerInTime");
-            if (brokerInTime != null && !brokerInTime.isEmpty()) {
-              long brokerTimestamp = Long.parseLong(brokerOutTime);
-              this.setTimestamp(brokerTimestamp);
-            }
-          } catch (JMSException jmsEx) {
-            log.warn("Ignoring exception encountered retrieving 'orignalBrokerInTime' property", jmsEx);
+          if (timestampMillis > 0) {
+            // String timestampString = String.format("%.3f", timestampMillis/1000.0);
+            String timestampString = String.valueOf(timestampMillis);
+            log.info("brokerInTime = {},  brokerOutTime = {}, timestampString = {}", advisedMessage.getBrokerInTime(), advisedMessage.getBrokerOutTime(), timestampString);
+            return timestampString;
           }
         }
-      } catch (JMSException jmsEx) {
-        log.warn("Ignoring exception encountered retrieving 'orignalBrokerOutTime' property", jmsEx);
       }
-
     }
+
+    log.info("using timestamp value from super");
 
     return super.getTimestampFieldValue();
   }
@@ -86,8 +81,6 @@ public class AdvisoryMessageEventBuilder extends JmsMessageEventBuilder {
       DataStructure dataStructure = advisoryMessage.getDataStructure();
       if (dataStructure != null && dataStructure instanceof ActiveMQMessage) {
         ActiveMQMessage advisedMessage = (ActiveMQMessage) dataStructure;
-        addField("orignalBrokerInTime", String.valueOf(advisedMessage.getBrokerInTime()));
-        addField("orignalBrokerOutTime", String.valueOf(advisedMessage.getBrokerOutTime()));
         try {
           Enumeration<String> propertyNames = advisedMessage.getPropertyNames();
           if (propertyNames != null) {
@@ -132,32 +125,40 @@ public class AdvisoryMessageEventBuilder extends JmsMessageEventBuilder {
   protected void extractMessageHeadersToMap(Message jmsMessage, Map<String, Object> targetMap) {
     if (jmsMessage != null && targetMap != null) {
     super.extractMessageHeadersToMap(jmsMessage, targetMap);
-      final String logMessageFormat = "Error Reading JMS Message Header '{}' - ignoring";
-
       try {
         Destination jmsDestination = jmsMessage.getJMSDestination();
         if (jmsDestination != null) {
           Matcher advisoryTypeMatcher = ADVISORY_TYPE_PATTERN.matcher(jmsDestination.toString());
           if (advisoryTypeMatcher.matches()) {
-            addField("AdvisoryType", advisoryTypeMatcher.group(1));
+            targetMap.put("AdvisoryType", advisoryTypeMatcher.group(1));
           }
         }
-      } catch (JMSException e) {
-        e.printStackTrace();
+      } catch (JMSException jmsEx) {
+        log.warn("Ingnoring exception encountered while attempting to derive AdvisoryType", jmsEx);
       }
       if (jmsMessage instanceof ActiveMQMessage) {
         ActiveMQMessage advisoryMessage = (ActiveMQMessage) jmsMessage;
+        DataStructure dataStructure = advisoryMessage.getDataStructure();
+        if (dataStructure instanceof ActiveMQMessage) {
+          ActiveMQMessage advisedMessage = (ActiveMQMessage) dataStructure;
 
-        long brokerOutTime = advisoryMessage.getBrokerOutTime();
-        if (brokerOutTime > 0) {
-          setTimestamp(brokerOutTime);
-        } else {
-          setTimestamp(advisoryMessage.getBrokerInTime());
+          targetMap.put("orignalBrokerInTime", String.valueOf(advisedMessage.getBrokerInTime()));
+          targetMap.put("orignalBrokerOutTime", String.valueOf(advisedMessage.getBrokerOutTime()));
+
+          String propertyName = null;
+          try {
+            propertyName = "breadcrumbId";
+            Object propertyValue = advisedMessage.getProperty(propertyName);
+            if (propertyValue != null) {
+              targetMap.put(propertyName, propertyValue.toString());
+            }
+          } catch (IOException ioEx) {
+            String warningMessage =  String.format("Ignoring exception encounted trying to read property %s", propertyName);
+            log.warn(warningMessage, ioEx);
+          }
         }
-
-      } else {
-        throw new IllegalStateException("Cannot generate Splunk event from type " + jmsMessage.getClass());
       }
+
     }
   }
 

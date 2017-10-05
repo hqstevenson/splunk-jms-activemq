@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package com.pronoia.stub.jms;
+package com.pronoia.stub.jms.activemq;
 
 import java.util.Collections;
 import java.util.Enumeration;
@@ -26,7 +26,9 @@ import javax.jms.Destination;
 import javax.jms.JMSException;
 import javax.jms.Message;
 
-public class JmsMessageStub implements Message {
+import org.apache.activemq.command.ActiveMQMessage;
+
+public class MessageStub extends ActiveMQMessage {
   String id = "Dummy Message Id";
   long timestamp = System.currentTimeMillis();
   byte[] correlationIdBytes;
@@ -39,10 +41,14 @@ public class JmsMessageStub implements Message {
   long expiration =0;
   int priority = 4;
 
+  public long brokerInTime = System.currentTimeMillis();
+  public long brokerOutTime = 0;
+
+
   Map<String, Object> properties = new HashMap<>();
 
   @Override
-  public String getJMSMessageID() throws JMSException {
+  public String getJMSMessageID() {
     return id;
   }
 
@@ -52,12 +58,12 @@ public class JmsMessageStub implements Message {
   }
 
   @Override
-  public long getJMSTimestamp() throws JMSException {
+  public long getJMSTimestamp() {
     return timestamp;
   }
 
   @Override
-  public void setJMSTimestamp(long timestamp) throws JMSException {
+  public void setJMSTimestamp(long timestamp) {
     this.timestamp = timestamp;
   }
 
@@ -72,17 +78,17 @@ public class JmsMessageStub implements Message {
   }
 
   @Override
-  public void setJMSCorrelationID(String correlationID) throws JMSException {
+  public void setJMSCorrelationID(String correlationID) {
     this.correlationId = correlationID;
   }
 
   @Override
-  public String getJMSCorrelationID() throws JMSException {
+  public String getJMSCorrelationID() {
     return this.correlationId;
   }
 
   @Override
-  public Destination getJMSReplyTo() throws JMSException {
+  public Destination getJMSReplyTo() {
     return replyTo;
   }
 
@@ -92,7 +98,7 @@ public class JmsMessageStub implements Message {
   }
 
   @Override
-  public Destination getJMSDestination() throws JMSException {
+  public Destination getJMSDestination() {
     return destination;
   }
 
@@ -102,57 +108,57 @@ public class JmsMessageStub implements Message {
   }
 
   @Override
-  public int getJMSDeliveryMode() throws JMSException {
+  public int getJMSDeliveryMode() {
     return deliveryMode;
   }
 
   @Override
-  public void setJMSDeliveryMode(int deliveryMode) throws JMSException {
+  public void setJMSDeliveryMode(int deliveryMode) {
     this.deliveryMode = deliveryMode;
   }
 
   @Override
-  public boolean getJMSRedelivered() throws JMSException {
+  public boolean getJMSRedelivered() {
     return redelivered;
   }
 
   @Override
-  public void setJMSRedelivered(boolean redelivered) throws JMSException {
+  public void setJMSRedelivered(boolean redelivered) {
     this.redelivered = redelivered;
   }
 
   @Override
-  public String getJMSType() throws JMSException {
+  public String getJMSType() {
     return type;
   }
 
   @Override
-  public void setJMSType(String type) throws JMSException {
+  public void setJMSType(String type) {
     this.type = type;
   }
 
   @Override
-  public long getJMSExpiration() throws JMSException {
+  public long getJMSExpiration() {
     return expiration;
   }
 
   @Override
-  public void setJMSExpiration(long expiration) throws JMSException {
+  public void setJMSExpiration(long expiration) {
     this.expiration = expiration;
   }
 
   @Override
-  public int getJMSPriority() throws JMSException {
+  public int getJMSPriority() {
     return priority;
   }
 
   @Override
-  public void setJMSPriority(int priority) throws JMSException {
+  public void setJMSPriority(int priority) {
     this.priority = priority;
   }
 
   @Override
-  public void clearProperties() throws JMSException {
+  public void clearProperties() {
     properties.clear();
   }
 
@@ -262,4 +268,13 @@ public class JmsMessageStub implements Message {
   @Override
   public void clearBody() throws JMSException {}
 
+  @Override
+  public long getBrokerInTime() {
+    return brokerInTime;
+  }
+
+  @Override
+  public long getBrokerOutTime() {
+    return brokerOutTime;
+  }
 }
