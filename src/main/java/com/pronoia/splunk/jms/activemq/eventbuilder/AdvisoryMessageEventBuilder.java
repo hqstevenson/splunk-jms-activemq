@@ -63,8 +63,6 @@ public class AdvisoryMessageEventBuilder extends JmsMessageEventBuilder {
       }
     }
 
-    log.info("using timestamp value from super");
-
     return super.getTimestampFieldValue();
   }
 
