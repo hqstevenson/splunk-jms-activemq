@@ -56,9 +56,7 @@ public class AdvisoryMessageEventBuilder extends JmsMessageEventBuilder {
           }
 
           if (timestampMillis > 0) {
-            // String timestampString = String.format("%.3f", timestampMillis/1000.0);
             String timestampString = String.valueOf(timestampMillis);
-            log.info("brokerInTime = {},  brokerOutTime = {}, timestampString = {}", advisedMessage.getBrokerInTime(), advisedMessage.getBrokerOutTime(), timestampString);
             return timestampString;
           }
         }
