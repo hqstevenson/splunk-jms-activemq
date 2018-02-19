@@ -1,21 +1,23 @@
 /**
- * Licensed to the Apache Software Foundation (ASF) under one or more contributor license agreements. See the NOTICE file distributed with this work for additional information regarding copyright
- * ownership. The ASF licenses this file to You under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the
- * License at
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
- * implied. See the License for the specific language governing permissions and limitations under the License.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
-
 package com.pronoia.splunk.jms.activemq;
 
-import com.pronoia.splunk.eventcollector.EventBuilder;
-import com.pronoia.splunk.eventcollector.EventCollectorClient;
-import com.pronoia.splunk.jms.eventbuilder.JmsMessageEventBuilder;
-
 import java.lang.management.ManagementFactory;
+
 import java.util.Set;
 
 import javax.jms.Message;
@@ -30,6 +32,10 @@ import javax.management.NotificationListener;
 import javax.management.ObjectName;
 import javax.management.relation.MBeanServerNotificationFilter;
 
+import com.pronoia.splunk.eventcollector.EventBuilder;
+import com.pronoia.splunk.eventcollector.EventCollectorClient;
+import com.pronoia.splunk.jms.eventbuilder.JmsMessageEventBuilder;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,320 +47,312 @@ import org.slf4j.LoggerFactory;
  * Brokers/queues are detected via JMX Notifications from the MBeanServerDelegate.
  */
 public abstract class SplunkEmbeddedActiveMQJmxListenerSupport implements NotificationListener {
-  static final String DEFAULT_BROKER_NAME = "*";
-  static final String DEFAULT_DESTINATION_TYPE = "Queue";
-  static final String DEFAULT_DESTINATION_NAME_PATTERN = "audit.*";
+    static final String DEFAULT_BROKER_NAME = "*";
+    static final String DEFAULT_DESTINATION_TYPE = "Queue";
+    static final String DEFAULT_DESTINATION_NAME_PATTERN = "audit.*";
 
-  Logger log = LoggerFactory.getLogger(this.getClass());
+    Logger log = LoggerFactory.getLogger(this.getClass());
 
-  String brokerName = DEFAULT_BROKER_NAME;
-  String userName;
-  String password;
+    String brokerName = DEFAULT_BROKER_NAME;
+    String userName;
+    String password;
 
-  boolean useRedelivery = true;
+    boolean useRedelivery = true;
 
-  Boolean useExponentialBackOff = true;
-  Double backoffMultiplier = 2.0;
+    Boolean useExponentialBackOff = true;
+    Double backoffMultiplier = 2.0;
 
-  Long initialRedeliveryDelay = 1000L;
-  Long maximumRedeliveryDelay = 60000L;
-  Integer maximumRedeliveries = -1;
+    Long initialRedeliveryDelay = 1000L;
+    Long maximumRedeliveryDelay = 60000L;
+    Integer maximumRedeliveries = -1;
 
-  String destinationType = DEFAULT_DESTINATION_TYPE;
-  String destinationNamePattern = DEFAULT_DESTINATION_NAME_PATTERN;
+    String destinationType = DEFAULT_DESTINATION_TYPE;
+    String destinationNamePattern = DEFAULT_DESTINATION_NAME_PATTERN;
 
-  EventCollectorClient splunkClient;
-  EventBuilder<Message> splunkEventBuilder;
+    EventCollectorClient splunkClient;
+    EventBuilder<Message> splunkEventBuilder;
 
-  boolean listenerStarted = false;
+    boolean listenerStarted;
 
-  public boolean hasBrokerName() {
-    return brokerName != null && !brokerName.isEmpty();
-  }
+    protected abstract void scheduleConsumerStartup(ObjectName mbeanName);
 
-  public String getBrokerName() {
-    return brokerName;
-  }
-
-  public void setBrokerName(String brokerName) {
-    this.brokerName = brokerName;
-  }
-
-  public boolean hasUserName() {
-    return userName != null && !userName.isEmpty();
-  }
-
-  public String getUserName() {
-    return userName;
-  }
-
-  public void setUserName(String userName) {
-    this.userName = userName;
-  }
-
-  public boolean hasPassword() {
-    return password != null && !password.isEmpty();
-  }
-
-  public String getPassword() {
-    return password;
-  }
-
-  public void setPassword(String password) {
-    this.password = password;
-  }
-
-  public boolean isUseRedelivery() {
-    return useRedelivery;
-  }
-
-  public void setUseRedelivery(boolean useRedelivery) {
-    this.useRedelivery = useRedelivery;
-  }
-
-  public boolean hasUseExponentialBackOff() {
-    return useExponentialBackOff != null;
-  }
-
-  public Boolean getUseExponentialBackOff() {
-    return useExponentialBackOff;
-  }
-
-  public void setUseExponentialBackOff(Boolean useExponentialBackOff) {
-    this.useExponentialBackOff = useExponentialBackOff;
-  }
-
-  public boolean hasBackoffMultiplier() {
-    return backoffMultiplier != null && backoffMultiplier > 1;
-  }
-
-  public Double getBackoffMultiplier() {
-    return backoffMultiplier;
-  }
-
-  public void setBackoffMultiplier(Double backoffMultiplier) {
-    this.backoffMultiplier = backoffMultiplier;
-  }
-
-  public boolean hasInitialRedeliveryDelay() {
-    return initialRedeliveryDelay != null && initialRedeliveryDelay > 0;
-  }
-
-  public Long getInitialRedeliveryDelay() {
-    return initialRedeliveryDelay;
-  }
-
-  public void setInitialRedeliveryDelay(Long initialRedeliveryDelay) {
-    this.initialRedeliveryDelay = initialRedeliveryDelay;
-  }
-
-  public boolean hasMaximumRedeliveryDelay() {
-    return maximumRedeliveryDelay != null && maximumRedeliveryDelay > 0;
-  }
-
-  public Long getMaximumRedeliveryDelay() {
-    return maximumRedeliveryDelay;
-  }
-
-  public void setMaximumRedeliveryDelay(Long maximumRedeliveryDelay) {
-    this.maximumRedeliveryDelay = maximumRedeliveryDelay;
-  }
-
-  public boolean hasMaximumRedeliveries() {
-    return maximumRedeliveries != null;
-  }
-
-  public Integer getMaximumRedeliveries() {
-    return maximumRedeliveries;
-  }
-
-  public void setMaximumRedeliveries(Integer maximumRedeliveries) {
-    this.maximumRedeliveries = maximumRedeliveries;
-  }
-
-  public boolean hasDestinationType() {
-    return destinationType != null && !destinationType.isEmpty();
-  }
-
-  public String getDestinationType() {
-    return destinationType;
-  }
-
-  public void setDestinationType(String destinationType) {
-    this.destinationType = destinationType;
-  }
-
-  public boolean hasDestinationName() {
-    return destinationNamePattern != null && !destinationNamePattern.isEmpty();
-  }
-
-  public String getDestinationNamePattern() {
-    return destinationNamePattern;
-  }
-
-  public void setDestinationNamePattern(String destinationNamePattern) {
-    this.destinationNamePattern = destinationNamePattern;
-  }
-
-  public boolean hasSplunkClient() {
-    return splunkClient != null;
-  }
-
-  public EventCollectorClient getSplunkClient() {
-    return splunkClient;
-  }
-
-  public void setSplunkClient(EventCollectorClient splunkClient) {
-    this.splunkClient = splunkClient;
-  }
-
-  public boolean hasSplunkEventBuilder() {
-    return splunkEventBuilder != null;
-  }
-
-  public EventBuilder<Message> getSplunkEventBuilder() {
-    return splunkEventBuilder;
-  }
-
-  public void setSplunkEventBuilder(EventBuilder<Message> splunkEventBuilder) {
-    this.splunkEventBuilder = splunkEventBuilder;
-  }
-
-  public boolean isListenerStarted() {
-    return listenerStarted;
-  }
-
-  void verifyConfiguration() throws IllegalStateException {
-    if (!hasSplunkClient()) {
-      throw new IllegalStateException("Splunk Client must be specified");
+    public boolean hasBrokerName() {
+        return brokerName != null && !brokerName.isEmpty();
     }
 
-    if (!hasSplunkEventBuilder()) {
-      splunkEventBuilder = new JmsMessageEventBuilder();
-      log.warn("Splunk EventBuilder<{}> is not specified - using default '{}'", Message.class.getName(), splunkEventBuilder.getClass().getName());
+    public String getBrokerName() {
+        return brokerName;
     }
 
-    if (!hasBrokerName()) {
-      brokerName = DEFAULT_BROKER_NAME;
-      log.warn("ActiveMQ Broker Name is not specified - using default '{}'", brokerName);
+    public void setBrokerName(String brokerName) {
+        this.brokerName = brokerName;
     }
 
-    if (!hasDestinationType()) {
-      destinationType = DEFAULT_DESTINATION_TYPE;
-      log.warn("Destination Type is not specified - using default '{}'", destinationType);
+    public boolean hasUserName() {
+        return userName != null && !userName.isEmpty();
     }
 
-    if (!hasDestinationName()) {
-      destinationNamePattern = DEFAULT_DESTINATION_NAME_PATTERN;
-      log.warn("Destination Name is not specified - using default '{}'", destinationNamePattern);
+    public String getUserName() {
+        return userName;
     }
 
-  }
-
-  /**
-   * Start NotificationListener, watching for the specific queue.
-   */
-  synchronized public void start() {
-    if (isListenerStarted()) {
-      log.warn("Attempting to start previously started NotificationListener instance - ignoring");
-      return;
+    public void setUserName(String userName) {
+        this.userName = userName;
     }
 
-    verifyConfiguration();
-
-    final ObjectName destinationObjectNamePattern = createDestinationObjectName();
-
-    log.info("Starting {} with ObjectName pattern {}", this.getClass().getSimpleName(), destinationObjectNamePattern);
-
-    MBeanServer mbeanServer = ManagementFactory.getPlatformMBeanServer();
-    MBeanServerNotificationFilter notificationFilter = new MBeanServerNotificationFilter();
-    notificationFilter.enableAllObjectNames();
-    notificationFilter.enableType(MBeanServerNotification.REGISTRATION_NOTIFICATION);
-
-    log.debug("Looking for pre-existing destinations");
-    Set<ObjectName> existingDestinationObjectNameSet = mbeanServer.queryNames(createDestinationObjectName(), null);
-    if (existingDestinationObjectNameSet != null && !existingDestinationObjectNameSet.isEmpty()) {
-      for (ObjectName mbeanName : existingDestinationObjectNameSet) {
-        scheduleConsumerStartup(mbeanName);
-      }
+    public boolean hasPassword() {
+        return password != null && !password.isEmpty();
     }
 
-    log.debug("Starting JMX NotificationListener watching for ObjectName pattern {}", destinationObjectNamePattern);
-    try {
-      mbeanServer.addNotificationListener(MBeanServerDelegate.DELEGATE_NAME, this, notificationFilter, null);
-    } catch (InstanceNotFoundException instanceNotFoundEx) {
-      String errorMessage = String.format("Failed to add NotificationListener to '%s' with filter '%s' for '%s' - dynamic destination detection is disabled",
-          MBeanServerDelegate.DELEGATE_NAME.getCanonicalName(),
-          notificationFilter.toString(),
-          destinationObjectNamePattern.getCanonicalName()
-      );
-      log.error(errorMessage, instanceNotFoundEx);
+    public String getPassword() {
+        return password;
     }
 
-    listenerStarted = true;
-  }
-
-  /**
-   * Stop the NotificationListener.
-   */
-  synchronized public void stop() {
-    log.info("Stopping {} with ObjectName {}", this.getClass().getSimpleName(), createDestinationObjectName());
-
-    MBeanServer mbeanServer = ManagementFactory.getPlatformMBeanServer();
-    try {
-      listenerStarted = false;
-      mbeanServer.removeNotificationListener(MBeanServerDelegate.DELEGATE_NAME, this);
-    } catch (InstanceNotFoundException | ListenerNotFoundException removalEx) {
-      String errorMessage = String.format("Ignoring exception encountered removed NotificationListener from '%s'", MBeanServerDelegate.DELEGATE_NAME.toString());
-      log.error(errorMessage, removalEx);
+    public void setPassword(String password) {
+        this.password = password;
     }
-  }
 
-  @Override
-  public void handleNotification(Notification notification, Object handback) {
-    if (notification instanceof MBeanServerNotification) {
-      MBeanServerNotification serverNotification = (MBeanServerNotification) notification;
-      if (MBeanServerNotification.REGISTRATION_NOTIFICATION.equals(notification.getType())) {
+    public boolean isUseRedelivery() {
+        return useRedelivery;
+    }
+
+    public void setUseRedelivery(boolean useRedelivery) {
+        this.useRedelivery = useRedelivery;
+    }
+
+    public boolean hasUseExponentialBackOff() {
+        return useExponentialBackOff != null;
+    }
+
+    public Boolean getUseExponentialBackOff() {
+        return useExponentialBackOff;
+    }
+
+    public void setUseExponentialBackOff(Boolean useExponentialBackOff) {
+        this.useExponentialBackOff = useExponentialBackOff;
+    }
+
+    public boolean hasBackoffMultiplier() {
+        return backoffMultiplier != null && backoffMultiplier > 1;
+    }
+
+    public Double getBackoffMultiplier() {
+        return backoffMultiplier;
+    }
+
+    public void setBackoffMultiplier(Double backoffMultiplier) {
+        this.backoffMultiplier = backoffMultiplier;
+    }
+
+    public boolean hasInitialRedeliveryDelay() {
+        return initialRedeliveryDelay != null && initialRedeliveryDelay > 0;
+    }
+
+    public Long getInitialRedeliveryDelay() {
+        return initialRedeliveryDelay;
+    }
+
+    public void setInitialRedeliveryDelay(Long initialRedeliveryDelay) {
+        this.initialRedeliveryDelay = initialRedeliveryDelay;
+    }
+
+    public boolean hasMaximumRedeliveryDelay() {
+        return maximumRedeliveryDelay != null && maximumRedeliveryDelay > 0;
+    }
+
+    public Long getMaximumRedeliveryDelay() {
+        return maximumRedeliveryDelay;
+    }
+
+    public void setMaximumRedeliveryDelay(Long maximumRedeliveryDelay) {
+        this.maximumRedeliveryDelay = maximumRedeliveryDelay;
+    }
+
+    public boolean hasMaximumRedeliveries() {
+        return maximumRedeliveries != null;
+    }
+
+    public Integer getMaximumRedeliveries() {
+        return maximumRedeliveries;
+    }
+
+    public void setMaximumRedeliveries(Integer maximumRedeliveries) {
+        this.maximumRedeliveries = maximumRedeliveries;
+    }
+
+    public boolean hasDestinationType() {
+        return destinationType != null && !destinationType.isEmpty();
+    }
+
+    public String getDestinationType() {
+        return destinationType;
+    }
+
+    public void setDestinationType(String destinationType) {
+        this.destinationType = destinationType;
+    }
+
+    public boolean hasDestinationName() {
+        return destinationNamePattern != null && !destinationNamePattern.isEmpty();
+    }
+
+    public String getDestinationNamePattern() {
+        return destinationNamePattern;
+    }
+
+    public void setDestinationNamePattern(String destinationNamePattern) {
+        this.destinationNamePattern = destinationNamePattern;
+    }
+
+    public boolean hasSplunkClient() {
+        return splunkClient != null;
+    }
+
+    public EventCollectorClient getSplunkClient() {
+        return splunkClient;
+    }
+
+    public void setSplunkClient(EventCollectorClient splunkClient) {
+        this.splunkClient = splunkClient;
+    }
+
+    public boolean hasSplunkEventBuilder() {
+        return splunkEventBuilder != null;
+    }
+
+    public EventBuilder<Message> getSplunkEventBuilder() {
+        return splunkEventBuilder;
+    }
+
+    public void setSplunkEventBuilder(EventBuilder<Message> splunkEventBuilder) {
+        this.splunkEventBuilder = splunkEventBuilder;
+    }
+
+    public boolean isListenerStarted() {
+        return listenerStarted;
+    }
+
+    void verifyConfiguration() throws IllegalStateException {
+        if (!hasSplunkClient()) {
+            throw new IllegalStateException("Splunk Client must be specified");
+        }
+
+        if (!hasSplunkEventBuilder()) {
+            splunkEventBuilder = new JmsMessageEventBuilder();
+            log.warn("Splunk EventBuilder<{}> is not specified - using default '{}'", Message.class.getName(), splunkEventBuilder.getClass().getName());
+        }
+
+        if (!hasBrokerName()) {
+            brokerName = DEFAULT_BROKER_NAME;
+            log.warn("ActiveMQ Broker Name is not specified - using default '{}'", brokerName);
+        }
+
+        if (!hasDestinationType()) {
+            destinationType = DEFAULT_DESTINATION_TYPE;
+            log.warn("Destination Type is not specified - using default '{}'", destinationType);
+        }
+
+        if (!hasDestinationName()) {
+            destinationNamePattern = DEFAULT_DESTINATION_NAME_PATTERN;
+            log.warn("Destination Name is not specified - using default '{}'", destinationNamePattern);
+        }
+
+    }
+
+    /**
+     * Start NotificationListener, watching for the specific queue.
+     */
+    public synchronized void start() {
+        if (isListenerStarted()) {
+            log.warn("Attempting to start previously started NotificationListener instance - ignoring");
+            return;
+        }
+
+        verifyConfiguration();
+
         final ObjectName destinationObjectNamePattern = createDestinationObjectName();
 
-        ObjectName mbeanName = serverNotification.getMBeanName();
-        if (destinationObjectNamePattern.apply(mbeanName)) {
-          log.debug("ObjectName '{}' matched '{}' - scheduling MessageListener startup.", mbeanName.getCanonicalName(), destinationObjectNamePattern.getCanonicalName());
-          scheduleConsumerStartup(mbeanName);
-        } else {
-          log.trace("ObjectName '{}' did not match '{}' - ignoring.", mbeanName.getCanonicalName(), destinationObjectNamePattern.getCanonicalName());
+        log.info("Starting {} with ObjectName pattern {}", this.getClass().getSimpleName(), destinationObjectNamePattern);
+
+        MBeanServer mbeanServer = ManagementFactory.getPlatformMBeanServer();
+        MBeanServerNotificationFilter notificationFilter = new MBeanServerNotificationFilter();
+        notificationFilter.enableAllObjectNames();
+        notificationFilter.enableType(MBeanServerNotification.REGISTRATION_NOTIFICATION);
+
+        log.debug("Looking for pre-existing destinations");
+        Set<ObjectName> existingDestinationObjectNameSet = mbeanServer.queryNames(createDestinationObjectName(), null);
+        if (existingDestinationObjectNameSet != null && !existingDestinationObjectNameSet.isEmpty()) {
+            for (ObjectName mbeanName : existingDestinationObjectNameSet) {
+                scheduleConsumerStartup(mbeanName);
+            }
         }
-      }
-    }
-  }
 
-  protected abstract void scheduleConsumerStartup(ObjectName mbeanName);
+        log.debug("Starting JMX NotificationListener watching for ObjectName pattern {}", destinationObjectNamePattern);
+        try {
+            mbeanServer.addNotificationListener(MBeanServerDelegate.DELEGATE_NAME, this, notificationFilter, null);
+        } catch (InstanceNotFoundException instanceNotFoundEx) {
+            String errorMessage = String.format("Failed to add NotificationListener to '%s' with filter '%s' for '%s' - dynamic destination detection is disabled",
+                MBeanServerDelegate.DELEGATE_NAME.getCanonicalName(),
+                notificationFilter.toString(),
+                destinationObjectNamePattern.getCanonicalName()
+            );
+            log.error(errorMessage, instanceNotFoundEx);
+        }
 
-  /*
-  void callScheduleConsumerStartup(ObjectName mbeanName) {
-    String destinationName = mbeanName.getKeyProperty("destinationName");
-    boolean useTopic = ("Topic".equals(mbeanName.getKeyProperty("destinationType"))) ? true : false;
-    scheduleConsumerStartup(destinationName, useTopic);
-  }
-  */
-
-  ObjectName createDestinationObjectName() {
-    ObjectName destinationObjectName;
-
-    String objectNameString = String.format("org.apache.activemq:type=Broker,brokerName=%s,destinationType=%s,destinationName=%s",
-        hasBrokerName() ? brokerName : '*',
-        hasDestinationType() ? destinationType : '*',
-        hasDestinationName() ? destinationNamePattern : '*'
-    );
-
-    try {
-      destinationObjectName = new ObjectName(objectNameString);
-    } catch (MalformedObjectNameException malformedObjectNameEx) {
-      String errorMessage = String.format("ObjectName '%s' is malformed", objectNameString);
-      throw new IllegalArgumentException(errorMessage, malformedObjectNameEx);
+        listenerStarted = true;
     }
 
-    return destinationObjectName;
-  }
+    /**
+     * Stop the NotificationListener.
+     */
+    public synchronized void stop() {
+        log.info("Stopping {} with ObjectName {}", this.getClass().getSimpleName(), createDestinationObjectName());
+
+        MBeanServer mbeanServer = ManagementFactory.getPlatformMBeanServer();
+        try {
+            listenerStarted = false;
+            mbeanServer.removeNotificationListener(MBeanServerDelegate.DELEGATE_NAME, this);
+        } catch (InstanceNotFoundException | ListenerNotFoundException removalEx) {
+            String errorMessage = String.format("Ignoring exception encountered removed NotificationListener from '%s'", MBeanServerDelegate.DELEGATE_NAME.toString());
+            log.error(errorMessage, removalEx);
+        }
+    }
+
+    @Override
+    public synchronized void handleNotification(Notification notification, Object handback) {
+        if (notification instanceof MBeanServerNotification) {
+            MBeanServerNotification serverNotification = (MBeanServerNotification) notification;
+            if (MBeanServerNotification.REGISTRATION_NOTIFICATION.equals(notification.getType())) {
+                final ObjectName destinationObjectNamePattern = createDestinationObjectName();
+
+                ObjectName mbeanName = serverNotification.getMBeanName();
+                if (destinationObjectNamePattern.apply(mbeanName)) {
+                    log.debug("ObjectName '{}' matched '{}' - scheduling MessageListener startup.", mbeanName.getCanonicalName(), destinationObjectNamePattern.getCanonicalName());
+                    scheduleConsumerStartup(mbeanName);
+                } else {
+                    log.trace("ObjectName '{}' did not match '{}' - ignoring.", mbeanName.getCanonicalName(), destinationObjectNamePattern.getCanonicalName());
+                }
+            }
+        }
+    }
+
+    ObjectName createDestinationObjectName() {
+        ObjectName destinationObjectName;
+
+        String objectNameString = String.format("org.apache.activemq:type=Broker,brokerName=%s,destinationType=%s,destinationName=%s",
+            hasBrokerName() ? brokerName : '*',
+            hasDestinationType() ? destinationType : '*',
+            hasDestinationName() ? destinationNamePattern : '*'
+        );
+
+        try {
+            destinationObjectName = new ObjectName(objectNameString);
+        } catch (MalformedObjectNameException malformedObjectNameEx) {
+            String errorMessage = String.format("ObjectName '%s' is malformed", objectNameString);
+            throw new IllegalArgumentException(errorMessage, malformedObjectNameEx);
+        }
+
+        return destinationObjectName;
+    }
 
 }

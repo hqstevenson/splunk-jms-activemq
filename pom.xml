@@ -7,7 +7,7 @@
   (the "License"); you may not use this file except in compliance with
   the License.  You may obtain a copy of the License at
 
-  http://www.apache.org/licenses/LICENSE-2.0
+       http://www.apache.org/licenses/LICENSE-2.0
 
   Unless required by applicable law or agreed to in writing, software
   distributed under the License is distributed on an "AS IS" BASIS,
@@ -20,28 +20,44 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.pronoia.splunk</groupId>
+    <groupId>com.github.hqstevenson.splunk</groupId>
     <artifactId>splunk.jms.activemq</artifactId>
     <packaging>bundle</packaging>
-    <version>0.5.9</version>
+    <version>0.5.10</version>
 
     <name>Splunk ActiveMQ Support Classes</name>
+    <description>
+        A library to assist in collecting data from ActiveMQ JMS Messages and building property-formatted
+        JSON payloads for Splunk Events for delivery to a Splunk HTTP Event Collector
+    </description>
+    <url>https://github.com/hqstevenson/splunk-jms-activemq</url>
 
-    <properties>
-        <slf4j-version>1.7.21</slf4j-version>
-    </properties>
+    <licenses>
+        <license>
+            <name>The Apache License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+        </license>
+    </licenses>
 
+    <developers>
+        <developer>
+            <name>Quinn Stevenson</name>
+            <email>quinn@pronoia-solutions.com</email>
+            <organization>Pronoia Solutions</organization>
+            <organizationUrl>https://github.com/hqstevenson</organizationUrl>
+        </developer>
+    </developers>
+
+    <scm>
+        <connection>scm:git:https://github.com/hqstevenson/splunk-jms-activemq.git</connection>
+        <developerConnection>scm:git:https://github.com/hqstevenson/splunk-jms-activemq.git</developerConnection>
+        <url>https://github.com/hqstevenson/splunk-jms-activemq/tree/master</url>
+    </scm>
     <dependencies>
         <dependency>
-            <groupId>com.pronoia.splunk</groupId>
+            <groupId>com.github.hqstevenson.splunk</groupId>
             <artifactId>splunk.jms</artifactId>
-            <version>0.5.3</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
-            <version>${slf4j-version}</version>
+            <version>0.5.5</version>
         </dependency>
 
         <dependency>
@@ -51,7 +67,7 @@
             <scope>provided</scope>
         </dependency>
 
-
+        <!-- Test Dependencies -->
         <dependency>
             <groupId>org.apache.activemq</groupId>
             <artifactId>activemq-broker</artifactId>
@@ -60,9 +76,9 @@
         </dependency>
 
         <dependency>
-            <groupId>com.pronoia.junit</groupId>
+            <groupId>com.github.hqstevenson.junit</groupId>
             <artifactId>activemq-junit</artifactId>
-            <version>1.0.0-SNAPSHOT</version>
+            <version>1.0.0</version>
             <scope>test</scope>
         </dependency>
 
@@ -80,10 +96,11 @@
             <scope>test</scope>
         </dependency>
 
+        <!-- Test Logging -->
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-simple</artifactId>
-            <version>${slf4j-version}</version>
+            <version>1.7.21</version>
             <scope>test</scope>
         </dependency>
 
@@ -112,7 +129,7 @@
             </plugin>
             <plugin>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.6.1</version>
+                <version>3.7.0</version>
                 <configuration>
                     <source>1.8</source>
                     <target>1.8</target>
@@ -121,6 +138,19 @@
             <plugin>
                 <artifactId>maven-deploy-plugin</artifactId>
                 <version>2.8.2</version>
+            </plugin>
+            <plugin>
+                <artifactId>maven-gpg-plugin</artifactId>
+                <version>1.6</version>
+                <executions>
+                    <execution>
+                        <id>sign-artifacts</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>sign</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
             <plugin>
                 <artifactId>maven-install-plugin</artifactId>
@@ -132,7 +162,15 @@
             </plugin>
             <plugin>
                 <artifactId>maven-javadoc-plugin</artifactId>
-                <version>2.10.4</version>
+                <version>3.0.0</version>
+                <executions>
+                    <execution>
+                        <id>attach-javadocs</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
             <plugin>
                 <artifactId>maven-resources-plugin</artifactId>
@@ -143,7 +181,19 @@
             </plugin>
             <plugin>
                 <artifactId>maven-site-plugin</artifactId>
-                <version>3.6</version>
+                <version>3.7</version>
+            </plugin>
+            <plugin>
+                <artifactId>maven-source-plugin</artifactId>
+                <version>3.0.1</version>
+                <executions>
+                    <execution>
+                        <id>attach-sources</id>
+                        <goals>
+                            <goal>jar-no-fork</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
             <plugin>
                 <artifactId>maven-surefire-plugin</artifactId>
@@ -154,7 +204,7 @@
             <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
-                <version>3.3.0</version>
+                <version>3.5.0</version>
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
@@ -162,6 +212,26 @@
                     </instructions>
                 </configuration>
             </plugin>
+
+            <plugin>
+                <groupId>org.sonatype.plugins</groupId>
+                <artifactId>nexus-staging-maven-plugin</artifactId>
+                <version>1.6.8</version>
+                <extensions>true</extensions>
+                <configuration>
+                    <serverId>ossrh</serverId>
+                    <nexusUrl>https://oss.sonatype.org/</nexusUrl>
+                    <autoReleaseAfterClose>true</autoReleaseAfterClose>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
+
+    <distributionManagement>
+        <snapshotRepository>
+            <id>ossrh</id>
+            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+        </snapshotRepository>
+    </distributionManagement>
+
 </project>
