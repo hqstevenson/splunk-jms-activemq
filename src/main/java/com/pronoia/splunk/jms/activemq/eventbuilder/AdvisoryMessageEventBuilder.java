@@ -17,9 +17,11 @@
 package com.pronoia.splunk.jms.activemq.eventbuilder;
 
 import java.io.IOException;
+
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
+
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 

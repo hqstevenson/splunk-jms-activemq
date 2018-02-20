@@ -18,8 +18,8 @@
 
 -->
 <beans
-        xmlns="http://www.springframework.org/schema/beans"
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns="http://www.springframework.org/schema/beans"
         xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
                             http://activemq.apache.org/schema/core http://activemq.apache.org/schema/core/activemq-core.xsd">
 
@@ -36,7 +36,7 @@
                             <constantPendingMessageLimitStrategy limit="1000"/>
                         </pendingMessageLimitStrategy>
                     </policyEntry>
-                    <policyEntry queue=">" producerFlowControl="true" memoryLimit="1mb" >
+                    <policyEntry queue=">" producerFlowControl="true" memoryLimit="1mb">
                     </policyEntry>
                 </policyEntries>
             </policyMap>
@@ -45,15 +45,15 @@
         <destinationInterceptors>
             <virtualDestinationInterceptor>
                 <virtualDestinations>
-                    <virtualTopic name="vt.&gt;"  prefix="" postfix=".*"/>
-                    <compositeTopic name="vt.in.&gt;" forwardOnly="false" >
+                    <virtualTopic name="vt.&gt;" prefix="" postfix=".*"/>
+                    <compositeTopic name="vt.in.&gt;" forwardOnly="false">
                         <forwardTo>
-                            <queue physicalName="audit.in" />
+                            <queue physicalName="audit.in"/>
                         </forwardTo>
                     </compositeTopic>
                     <compositeQueue name="in.&gt;" forwardOnly="false">
                         <forwardTo>
-                            <queue physicalName="audit.in" />
+                            <queue physicalName="audit.in"/>
                         </forwardTo>
                     </compositeQueue>
                 </virtualDestinations>
@@ -69,7 +69,7 @@
         </persistenceAdapter>
 
         <plugins>
-            <jaasAuthenticationPlugin configuration="karaf" />
+            <jaasAuthenticationPlugin configuration="karaf"/>
             <redeliveryPlugin fallbackToDeadLetter="true" sendToDlqIfMaxRetriesExceeded="true">
                 <redeliveryPolicyMap>
                     <redeliveryPolicyMap>
@@ -78,12 +78,12 @@
                                               backOffMultiplier="2"
                                               initialRedeliveryDelay="1000"
                                               maximumRedeliveryDelay="60000"
-                                              maximumRedeliveries="-1" />
+                                              maximumRedeliveries="-1"/>
                             <redeliveryPolicy queue="vt.in.>" useExponentialBackOff="true"
                                               backOffMultiplier="2"
                                               initialRedeliveryDelay="1000"
                                               maximumRedeliveryDelay="60000"
-                                              maximumRedeliveries="-1" />
+                                              maximumRedeliveries="-1"/>
                             <redeliveryPolicy queue="vt.in.&gt;" maximumRedeliveries="-1" initialRedeliveryDelay="1000" redeliveryDelay="5000"/>
                         </redeliveryPolicyEntries>
                         <defaultEntry>

@@ -17,7 +17,6 @@
 package com.pronoia.splunk.jms.activemq;
 
 import java.util.Map;
-
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.management.ObjectName;
@@ -90,11 +89,6 @@ public class SplunkEmbeddedActiveMQMessageConsumerFactory extends SplunkEmbedded
         }
     }
 
-    public SplunkJmsMessageConsumer getMessageListener(String canonicalNameString) {
-        return consumerMap.get(canonicalNameString);
-    }
-
-
     /**
      * Stop the NotificationListener.
      */
@@ -113,7 +107,8 @@ public class SplunkEmbeddedActiveMQMessageConsumerFactory extends SplunkEmbedded
         }
     }
 
-
-
+    public SplunkJmsMessageConsumer getMessageListener(String canonicalNameString) {
+        return consumerMap.get(canonicalNameString);
+    }
 
 }

@@ -23,7 +23,7 @@
     <groupId>com.github.hqstevenson.splunk</groupId>
     <artifactId>splunk.jms.activemq</artifactId>
     <packaging>bundle</packaging>
-    <version>0.5.10</version>
+    <version>1.0.0</version>
 
     <name>Splunk ActiveMQ Support Classes</name>
     <description>
@@ -57,7 +57,7 @@
         <dependency>
             <groupId>com.github.hqstevenson.splunk</groupId>
             <artifactId>splunk.jms</artifactId>
-            <version>0.5.5</version>
+            <version>1.0.0</version>
         </dependency>
 
         <dependency>
@@ -78,7 +78,7 @@
         <dependency>
             <groupId>com.github.hqstevenson.junit</groupId>
             <artifactId>activemq-junit</artifactId>
-            <version>1.0.0</version>
+            <version>1.0.2</version>
             <scope>test</scope>
         </dependency>
 

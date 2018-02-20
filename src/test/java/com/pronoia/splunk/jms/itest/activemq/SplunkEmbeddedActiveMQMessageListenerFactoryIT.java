@@ -14,9 +14,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.pronoia.splunk.jms.itest.activemq;
 
 import com.pronoia.junit.activemq.EmbeddedActiveMQBroker;
+import com.pronoia.junit.asserts.activemq.EmbeddedBrokerAssert;
+
 import com.pronoia.splunk.eventcollector.client.SimpleEventCollectorClient;
 import com.pronoia.splunk.jms.activemq.SplunkEmbeddedActiveMQMessageListenerFactory;
 import com.pronoia.splunk.jms.eventbuilder.JmsMessageEventBuilder;
@@ -24,10 +27,9 @@ import com.pronoia.splunk.jms.eventbuilder.JmsMessageEventBuilder;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import static com.pronoia.junit.asserts.activemq.EmbeddedBrokerAssert.assertMessageCount;
 
 /**
  * Tests for the  class.
@@ -100,7 +102,7 @@ public class SplunkEmbeddedActiveMQMessageListenerFactoryIT {
         instance.start();
 
         Thread.sleep(30000);
-        assertMessageCount(broker, DESTINATION_NAME, 0);
+        EmbeddedBrokerAssert.assertMessageCount(broker, DESTINATION_NAME, 0);
     }
 
 }

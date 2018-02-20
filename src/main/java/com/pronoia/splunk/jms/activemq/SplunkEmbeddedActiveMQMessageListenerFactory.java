@@ -17,7 +17,6 @@
 package com.pronoia.splunk.jms.activemq;
 
 import java.util.Map;
-
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -92,6 +91,24 @@ public class SplunkEmbeddedActiveMQMessageListenerFactory extends SplunkEmbedded
         }
     }
 
+    /**
+     * Stop the NotificationListener.
+     */
+    public synchronized void stop() {
+        super.stop();
+
+        if (listenerMap != null && !listenerMap.isEmpty()) {
+            for (Map.Entry<String, SplunkJmsMessageListener> listenerEntry : listenerMap.entrySet()) {
+                SplunkJmsMessageListener messageListener = listenerEntry.getValue();
+                if (messageListener != null && messageListener.isConnectionStarted()) {
+                    log.info("Stopping listener for {}", listenerEntry.getKey());
+                    messageListener.stop();
+                }
+            }
+            listenerMap.clear();
+        }
+    }
+
     public long getStartupDelay() {
         return startupDelay;
     }
@@ -111,26 +128,5 @@ public class SplunkEmbeddedActiveMQMessageListenerFactory extends SplunkEmbedded
     public SplunkJmsMessageListener getMessageListener(String canonicalNameString) {
         return listenerMap.get(canonicalNameString);
     }
-
-
-    /**
-     * Stop the NotificationListener.
-     */
-    public synchronized void stop() {
-        super.stop();
-
-        if (listenerMap != null && !listenerMap.isEmpty()) {
-            for (Map.Entry<String, SplunkJmsMessageListener> listenerEntry : listenerMap.entrySet()) {
-                SplunkJmsMessageListener messageListener = listenerEntry.getValue();
-                if (messageListener != null && messageListener.isConnectionStarted()) {
-                    log.info("Stopping listener for {}", listenerEntry.getKey());
-                    messageListener.stop();
-                }
-            }
-            listenerMap.clear();
-        }
-    }
-
-
 
 }
