@@ -35,6 +35,7 @@ import javax.management.relation.MBeanServerNotificationFilter;
 
 import com.pronoia.splunk.eventcollector.EventBuilder;
 import com.pronoia.splunk.eventcollector.EventCollectorClient;
+import com.pronoia.splunk.jms.eventbuilder.CamelJmsMessageEventBuilder;
 import com.pronoia.splunk.jms.eventbuilder.JmsMessageEventBuilder;
 
 import org.slf4j.Logger;
@@ -239,7 +240,7 @@ public abstract class SplunkEmbeddedActiveMQJmxListenerSupport implements Notifi
         }
 
         if (!hasSplunkEventBuilder()) {
-            splunkEventBuilder = new JmsMessageEventBuilder();
+            splunkEventBuilder = new CamelJmsMessageEventBuilder();
             log.warn("Splunk EventBuilder<{}> is not specified - using default '{}'", Message.class.getName(), splunkEventBuilder.getClass().getName());
         }
 

@@ -76,12 +76,6 @@ public class SplunkEmbeddedActiveMQMessageListenerFactoryIT {
         httpecClient.setAuthorizationToken("5DA702AD-D855-4679-9CDE-A398494BE854");
         httpecClient.disableCertificateValidation();
 
-        // UCLA Settings
-        // httpecClient.setHost("lstsplkap19");
-        // httpecClient.setPort(8088);
-        // httpecClient.setAuthorizationToken("902ADE3D-2895-47F0-ABE6-4981DB2ABE9C");
-        // httpecClient.disableCertificateValidation();
-
         instance.setSplunkClient(httpecClient);
     }
 

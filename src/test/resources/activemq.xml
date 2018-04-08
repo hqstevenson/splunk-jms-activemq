@@ -70,6 +70,8 @@
 
         <plugins>
             <jaasAuthenticationPlugin configuration="karaf"/>
+            <bean id="vmAuthPlugin" xmlns="http://www.springframework.org/schema/beans"
+                  class="com.pronoia.splunk.jms.activemq.util.VmAuthenticationPlugin" />
             <redeliveryPlugin fallbackToDeadLetter="true" sendToDlqIfMaxRetriesExceeded="true">
                 <redeliveryPolicyMap>
                     <redeliveryPolicyMap>
