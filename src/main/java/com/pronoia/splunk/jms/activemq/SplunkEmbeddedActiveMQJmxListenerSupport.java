@@ -31,15 +31,20 @@ import javax.management.MalformedObjectNameException;
 import javax.management.Notification;
 import javax.management.NotificationListener;
 import javax.management.ObjectName;
+
 import javax.management.relation.MBeanServerNotificationFilter;
+
 
 import com.pronoia.splunk.eventcollector.EventBuilder;
 import com.pronoia.splunk.eventcollector.EventCollectorClient;
+import com.pronoia.splunk.eventcollector.SplunkMDCHelper;
+
 import com.pronoia.splunk.jms.eventbuilder.CamelJmsMessageEventBuilder;
-import com.pronoia.splunk.jms.eventbuilder.JmsMessageEventBuilder;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
+
 
 /**
  * Discovers ActiveMQ Brokers and queues running in the same JVM (embedded), and creates SplunkJmsMessageLister instances for the discovered queues.
@@ -244,21 +249,22 @@ public abstract class SplunkEmbeddedActiveMQJmxListenerSupport implements Notifi
             log.warn("Splunk EventBuilder<{}> is not specified - using default '{}'", Message.class.getName(), splunkEventBuilder.getClass().getName());
         }
 
-        if (!hasBrokerName()) {
-            brokerName = DEFAULT_BROKER_NAME;
-            log.warn("ActiveMQ Broker Name is not specified - using default '{}'", brokerName);
-        }
+        try (SplunkMDCHelper helper = createMdcHelper()) {
+            if (!hasBrokerName()) {
+                brokerName = DEFAULT_BROKER_NAME;
+                log.warn("ActiveMQ Broker Name is not specified - using default '{}'", brokerName);
+            }
 
-        if (!hasDestinationType()) {
-            destinationType = DEFAULT_DESTINATION_TYPE;
-            log.warn("Destination Type is not specified - using default '{}'", destinationType);
-        }
+            if (!hasDestinationType()) {
+                destinationType = DEFAULT_DESTINATION_TYPE;
+                log.warn("Destination Type is not specified - using default '{}'", destinationType);
+            }
 
-        if (!hasDestinationName()) {
-            destinationNamePattern = DEFAULT_DESTINATION_NAME_PATTERN;
-            log.warn("Destination Name is not specified - using default '{}'", destinationNamePattern);
+            if (!hasDestinationName()) {
+                destinationNamePattern = DEFAULT_DESTINATION_NAME_PATTERN;
+                log.warn("Destination Name is not specified - using default '{}'", destinationNamePattern);
+            }
         }
-
     }
 
     /**
@@ -266,86 +272,99 @@ public abstract class SplunkEmbeddedActiveMQJmxListenerSupport implements Notifi
      */
     public synchronized void start() {
         if (isListenerStarted()) {
-            log.warn("Attempting to start previously started NotificationListener instance - ignoring");
+            try (SplunkMDCHelper helper = createMdcHelper()) {
+                log.warn("Attempting to start previously started NotificationListener instance - ignoring");
+            }
             return;
         }
 
         verifyConfiguration();
 
-        final ObjectName destinationObjectNamePattern = createDestinationObjectName();
+        try (SplunkMDCHelper helper = createMdcHelper()) {
+            final ObjectName destinationObjectNamePattern = createDestinationObjectName();
 
-        log.info("Starting {} with ObjectName pattern {}", this.getClass().getSimpleName(), destinationObjectNamePattern);
+            log.info("Starting {} with ObjectName pattern {}", this.getClass().getSimpleName(), destinationObjectNamePattern);
 
-        MBeanServer mbeanServer = ManagementFactory.getPlatformMBeanServer();
-        MBeanServerNotificationFilter notificationFilter = new MBeanServerNotificationFilter();
-        notificationFilter.enableAllObjectNames();
-        notificationFilter.enableType(MBeanServerNotification.REGISTRATION_NOTIFICATION);
+            MBeanServerNotificationFilter notificationFilter = new MBeanServerNotificationFilter();
+            notificationFilter.enableAllObjectNames();
+            notificationFilter.enableType(MBeanServerNotification.REGISTRATION_NOTIFICATION);
 
-        log.debug("Looking for pre-existing destinations");
-        Set<ObjectName> existingDestinationObjectNameSet = mbeanServer.queryNames(createDestinationObjectName(), null);
-        if (existingDestinationObjectNameSet != null && !existingDestinationObjectNameSet.isEmpty()) {
-            for (ObjectName mbeanName : existingDestinationObjectNameSet) {
-                scheduleConsumerStartup(mbeanName);
+            log.debug("Looking for pre-existing destinations");
+            MBeanServer mbeanServer = ManagementFactory.getPlatformMBeanServer();
+            Set<ObjectName> existingDestinationObjectNameSet = mbeanServer.queryNames(createDestinationObjectName(), null);
+            if (existingDestinationObjectNameSet != null && !existingDestinationObjectNameSet.isEmpty()) {
+                for (ObjectName mbeanName : existingDestinationObjectNameSet) {
+                    scheduleConsumerStartup(mbeanName);
+                }
             }
-        }
 
-        log.debug("Starting JMX NotificationListener watching for ObjectName pattern {}", destinationObjectNamePattern);
-        try {
-            mbeanServer.addNotificationListener(MBeanServerDelegate.DELEGATE_NAME, this, notificationFilter, null);
-        } catch (InstanceNotFoundException instanceNotFoundEx) {
-            String errorMessage = String.format("Failed to add NotificationListener to '%s' with filter '%s' for '%s' - dynamic destination detection is disabled",
-                MBeanServerDelegate.DELEGATE_NAME.getCanonicalName(),
-                notificationFilter.toString(),
-                destinationObjectNamePattern.getCanonicalName()
-            );
-            log.error(errorMessage, instanceNotFoundEx);
-        }
+            log.debug("Starting JMX NotificationListener watching for ObjectName pattern {}", destinationObjectNamePattern);
+            try {
+                mbeanServer.addNotificationListener(MBeanServerDelegate.DELEGATE_NAME, this, notificationFilter, null);
+            } catch (InstanceNotFoundException instanceNotFoundEx) {
+                log.error("Failed to add NotificationListener to '{}' with filter '{}' for '{}' - dynamic destination detection is disabled",
+                        MBeanServerDelegate.DELEGATE_NAME.getCanonicalName(),
+                        notificationFilter.toString(),
+                        destinationObjectNamePattern.getCanonicalName(),
+                        instanceNotFoundEx);
+            }
 
-        listenerStarted = true;
+            listenerStarted = true;
+        }
     }
 
     /**
      * Stop the NotificationListener.
      */
     public synchronized void stop() {
-        log.info("Stopping {} with ObjectName {}", this.getClass().getSimpleName(), createDestinationObjectName());
+        try (SplunkMDCHelper helper = createMdcHelper()) {
+            log.info("Stopping {} with ObjectName {}", this.getClass().getSimpleName(), createDestinationObjectName());
 
-        MBeanServer mbeanServer = ManagementFactory.getPlatformMBeanServer();
-        try {
-            listenerStarted = false;
-            mbeanServer.removeNotificationListener(MBeanServerDelegate.DELEGATE_NAME, this);
-        } catch (InstanceNotFoundException | ListenerNotFoundException removalEx) {
-            String errorMessage = String.format("Ignoring exception encountered removed NotificationListener from '%s'", MBeanServerDelegate.DELEGATE_NAME.toString());
-            log.error(errorMessage, removalEx);
+            MBeanServer mbeanServer = ManagementFactory.getPlatformMBeanServer();
+            try {
+                listenerStarted = false;
+                mbeanServer.removeNotificationListener(MBeanServerDelegate.DELEGATE_NAME, this);
+            } catch (InstanceNotFoundException | ListenerNotFoundException removalEx) {
+                String errorMessage = String.format("Ignoring exception encountered removed NotificationListener from '%s'", MBeanServerDelegate.DELEGATE_NAME.toString());
+                log.error(errorMessage, removalEx);
+            }
         }
     }
 
     @Override
     public synchronized void handleNotification(Notification notification, Object handback) {
         if (notification instanceof MBeanServerNotification) {
-            MBeanServerNotification serverNotification = (MBeanServerNotification) notification;
-            if (MBeanServerNotification.REGISTRATION_NOTIFICATION.equals(notification.getType())) {
-                final ObjectName destinationObjectNamePattern = createDestinationObjectName();
+            try (SplunkMDCHelper helper = createMdcHelper()) {
+                MBeanServerNotification serverNotification = (MBeanServerNotification) notification;
+                if (MBeanServerNotification.REGISTRATION_NOTIFICATION.equals(notification.getType())) {
+                    final ObjectName destinationObjectNamePattern = createDestinationObjectName();
 
-                ObjectName mbeanName = serverNotification.getMBeanName();
-                if (destinationObjectNamePattern.apply(mbeanName)) {
-                    log.debug("ObjectName '{}' matched '{}' - scheduling MessageListener startup.", mbeanName.getCanonicalName(), destinationObjectNamePattern.getCanonicalName());
-                    scheduleConsumerStartup(mbeanName);
-                } else {
-                    log.trace("ObjectName '{}' did not match '{}' - ignoring.", mbeanName.getCanonicalName(), destinationObjectNamePattern.getCanonicalName());
+                    ObjectName mbeanName = serverNotification.getMBeanName();
+                    if (destinationObjectNamePattern.apply(mbeanName)) {
+                        log.debug("ObjectName '{}' matched '{}' - scheduling MessageListener startup.", mbeanName.getCanonicalName(), destinationObjectNamePattern.getCanonicalName());
+                        scheduleConsumerStartup(mbeanName);
+                    } else {
+                        log.trace("ObjectName '{}' did not match '{}' - ignoring.", mbeanName.getCanonicalName(), destinationObjectNamePattern.getCanonicalName());
+                    }
                 }
             }
         }
     }
 
+    String createDestinationObjectNameString() {
+        String objectNameString = String.format("org.apache.activemq:type=Broker,brokerName=%s,destinationType=%s,destinationName=%s",
+                hasBrokerName() ? brokerName : '*',
+                hasDestinationType() ? destinationType : '*',
+                hasDestinationName() ? destinationNamePattern : '*'
+        );
+
+        return objectNameString;
+    }
+
     ObjectName createDestinationObjectName() {
         ObjectName destinationObjectName;
 
-        String objectNameString = String.format("org.apache.activemq:type=Broker,brokerName=%s,destinationType=%s,destinationName=%s",
-            hasBrokerName() ? brokerName : '*',
-            hasDestinationType() ? destinationType : '*',
-            hasDestinationName() ? destinationNamePattern : '*'
-        );
+        String objectNameString = createDestinationObjectNameString();
 
         try {
             destinationObjectName = new ObjectName(objectNameString);
@@ -355,6 +374,20 @@ public abstract class SplunkEmbeddedActiveMQJmxListenerSupport implements Notifi
         }
 
         return destinationObjectName;
+    }
+
+    protected SplunkMDCHelper createMdcHelper() {
+        return new EmbeddedActiveMQJmxNotificationListenerMDCHelper();
+    }
+
+    class EmbeddedActiveMQJmxNotificationListenerMDCHelper extends SplunkMDCHelper {
+        public static final String MDC_ACTIVEMQ_JMX_NOTIFICATAION_SOURCE_MEAN = "splunk.jmx.notification.source";
+
+        EmbeddedActiveMQJmxNotificationListenerMDCHelper() {
+            addEventBuilderValues(splunkEventBuilder);
+            saveContextMap();
+            MDC.put(MDC_ACTIVEMQ_JMX_NOTIFICATAION_SOURCE_MEAN, createDestinationObjectName().getCanonicalName());
+        }
     }
 
 }

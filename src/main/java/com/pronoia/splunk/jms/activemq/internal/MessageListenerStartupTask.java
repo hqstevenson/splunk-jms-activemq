@@ -22,6 +22,7 @@ import com.pronoia.splunk.jms.activemq.SplunkEmbeddedActiveMQMessageListenerFact
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+
 public class MessageListenerStartupTask implements Runnable {
     Logger log = LoggerFactory.getLogger(this.getClass());
 

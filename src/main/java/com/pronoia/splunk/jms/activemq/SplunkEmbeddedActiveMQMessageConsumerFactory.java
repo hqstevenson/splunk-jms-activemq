@@ -21,7 +21,10 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import javax.management.ObjectName;
 
+import com.pronoia.splunk.eventcollector.SplunkMDCHelper;
+
 import com.pronoia.splunk.jms.SplunkJmsMessageConsumer;
+
 
 /**
  * Discovers ActiveMQ Brokers and queues running in the same JVM (embedded), and creates SplunkJmsMessageLister instances for the discovered queues.
@@ -41,50 +44,51 @@ public class SplunkEmbeddedActiveMQMessageConsumerFactory extends SplunkEmbedded
     protected synchronized void scheduleConsumerStartup(ObjectName mbeanName) {
         String objectNameString = mbeanName.getCanonicalName();
 
-        if (consumerMap.containsKey(objectNameString)) {
-            log.debug("JMS consumer startup already scheduled for {} - ignoring", objectNameString);
-        } else {
+        try (SplunkMDCHelper helper = createMdcHelper()) {
+            if (consumerMap.containsKey(objectNameString)) {
+                log.debug("JMS consumer startup already scheduled for {} - ignoring", objectNameString);
+            } else {
+                log.info("JMS consumer startup for {}", objectNameString);
 
-            log.info("JMS consumer startup for {}", objectNameString);
+                String destinationName = mbeanName.getKeyProperty("destinationName");
+                boolean useTopic = ("Topic".equals(mbeanName.getKeyProperty("destinationType"))) ? true : false;
 
-            String destinationName = mbeanName.getKeyProperty("destinationName");
-            boolean useTopic = ("Topic".equals(mbeanName.getKeyProperty("destinationType"))) ? true : false;
+                SplunkActiveMqMessageConsumer newMessageConsumer = new SplunkActiveMqMessageConsumer(destinationName, useTopic);
 
-            SplunkActiveMqMessageConsumer newMessageConsumer = new SplunkActiveMqMessageConsumer(destinationName, useTopic);
+                newMessageConsumer.setReceiveTimeoutMillis(receiveTimeoutMillis);
+                newMessageConsumer.setInitialDelaySeconds(initialDelaySeconds);
+                newMessageConsumer.setDelaySeconds(delaySeconds);
 
-            newMessageConsumer.setReceiveTimeoutMillis(receiveTimeoutMillis);
-            newMessageConsumer.setInitialDelaySeconds(initialDelaySeconds);
-            newMessageConsumer.setDelaySeconds(delaySeconds);
+                if (isUseRedelivery()) {
+                    newMessageConsumer.setUseRedelivery(useRedelivery);
+                    newMessageConsumer.setMaximumRedeliveries(maximumRedeliveries);
+                    newMessageConsumer.setInitialRedeliveryDelay(initialRedeliveryDelay);
+                    newMessageConsumer.setMaximumRedeliveryDelay(maximumRedeliveryDelay);
 
-            if (isUseRedelivery()) {
-                newMessageConsumer.setUseRedelivery(useRedelivery);
-                newMessageConsumer.setMaximumRedeliveries(maximumRedeliveries);
-                newMessageConsumer.setInitialRedeliveryDelay(initialRedeliveryDelay);
-                newMessageConsumer.setMaximumRedeliveryDelay(maximumRedeliveryDelay);
-
-                if (hasUseExponentialBackOff()) {
-                    newMessageConsumer.setUseExponentialBackOff(useExponentialBackOff);
-                    newMessageConsumer.setBackoffMultiplier(backoffMultiplier);
+                    if (hasUseExponentialBackOff()) {
+                        newMessageConsumer.setUseExponentialBackOff(useExponentialBackOff);
+                        newMessageConsumer.setBackoffMultiplier(backoffMultiplier);
+                    }
                 }
-            }
 
-            newMessageConsumer.setBrokerURL(String.format("vm://%s?create=false", mbeanName.getKeyProperty("brokerName")));
+                newMessageConsumer.setBrokerURL(String.format("vm://%s?create=false", mbeanName.getKeyProperty("brokerName")));
 
-            if (hasUserName()) {
-                newMessageConsumer.setUserName(userName);
-            }
-            if (hasPassword()) {
-                newMessageConsumer.setPassword(password);
-            }
+                if (hasUserName()) {
+                    newMessageConsumer.setUserName(userName);
+                }
+                if (hasPassword()) {
+                    newMessageConsumer.setPassword(password);
+                }
 
-            newMessageConsumer.setSplunkEventBuilder(splunkEventBuilder.duplicate());
+                newMessageConsumer.setSplunkEventBuilder(splunkEventBuilder.duplicate());
 
-            newMessageConsumer.setSplunkClient(splunkClient);
+                newMessageConsumer.setSplunkClient(splunkClient);
 
-            if (!consumerMap.containsKey(objectNameString)) {
-                log.info("Scheduling MessageListener for {}", objectNameString);
-                consumerMap.put(objectNameString, newMessageConsumer);
-                newMessageConsumer.start();
+                if (!consumerMap.containsKey(objectNameString)) {
+                    log.info("Scheduling MessageListener for {}", objectNameString);
+                    consumerMap.put(objectNameString, newMessageConsumer);
+                    newMessageConsumer.start();
+                }
             }
         }
     }
@@ -93,22 +97,36 @@ public class SplunkEmbeddedActiveMQMessageConsumerFactory extends SplunkEmbedded
      * Stop the NotificationListener.
      */
     public synchronized void stop() {
-        super.stop();
+        try (SplunkMDCHelper helper = createMdcHelper()) {
+            super.stop();
 
-        if (consumerMap != null && !consumerMap.isEmpty()) {
-            for (Map.Entry<String, SplunkJmsMessageConsumer> consumerEntry : consumerMap.entrySet()) {
-                SplunkJmsMessageConsumer messageConsumer = consumerEntry.getValue();
-                if (messageConsumer != null && messageConsumer.isConnectionStarted()) {
-                    log.info("Stopping consumer for {}", consumerEntry.getKey());
-                    messageConsumer.stop();
+            if (consumerMap != null && !consumerMap.isEmpty()) {
+                for (Map.Entry<String, SplunkJmsMessageConsumer> consumerEntry : consumerMap.entrySet()) {
+                    SplunkJmsMessageConsumer messageConsumer = consumerEntry.getValue();
+                    if (messageConsumer != null && messageConsumer.isConnectionStarted()) {
+                        log.info("Stopping consumer for {}", consumerEntry.getKey());
+                        messageConsumer.stop();
+                    }
                 }
+                consumerMap.clear();
             }
-            consumerMap.clear();
         }
     }
 
     public SplunkJmsMessageConsumer getMessageListener(String canonicalNameString) {
         return consumerMap.get(canonicalNameString);
+    }
+
+    protected SplunkMDCHelper createMdcHelper() {
+        return new EmbeddedActiveMQJmxNotificationListenerMDCHelper();
+    }
+
+    class EmbeddedActiveMQJmxNotificationListenerMDCHelper extends SplunkMDCHelper {
+        public static final String MDC_ACTIVEMQ_JMX_NOTIFICATAION_SOURCE_MEAN = "splunk.jmx.notification.source";
+
+        EmbeddedActiveMQJmxNotificationListenerMDCHelper() {
+            addEventBuilderValues(splunkEventBuilder);
+        }
     }
 
 }

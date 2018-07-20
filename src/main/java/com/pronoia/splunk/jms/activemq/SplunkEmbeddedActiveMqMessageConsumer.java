@@ -19,6 +19,7 @@ package com.pronoia.splunk.jms.activemq;
 import com.pronoia.splunk.jms.SplunkJmsMessageConsumer;
 import com.pronoia.splunk.jms.activemq.internal.ActiveMqBrokerUtils;
 
+
 /**
  *
  */
@@ -26,9 +27,6 @@ public class SplunkEmbeddedActiveMqMessageConsumer extends SplunkJmsMessageConsu
     String brokerName;
     String userName;
     String password;
-
-    public SplunkEmbeddedActiveMqMessageConsumer() {
-    }
 
     public SplunkEmbeddedActiveMqMessageConsumer(String destinationName) {
         super(destinationName);

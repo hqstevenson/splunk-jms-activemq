@@ -24,8 +24,17 @@ import javax.jms.JMSException;
 import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.command.ActiveMQTextMessage;
 
+
+/**
+ * Simple ActiveMQ advisory message stub for testing.
+ *
+ * TODO:  See if Mockio would work (reduce technical debt)
+ */
 public class AdvisoryMessageStub extends ActiveMQMessage {
 
+    /**
+     * Create a stubbed ActiveMQ advisory message.
+     */
     public AdvisoryMessageStub() {
         final String advisedMessageId = "Dummy-Message-ID";
 

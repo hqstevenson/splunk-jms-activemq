@@ -24,8 +24,8 @@ import org.slf4j.LoggerFactory;
 
 
 public class VmAuthenticationPlugin implements BrokerPlugin {
-    private static final String DEFAULT_VM_USER = "splunk";
-    private static final String DEFAULT_VM_GROUP = "users";
+    public static final String DEFAULT_VM_USER = "splunk";
+    public static final String DEFAULT_VM_GROUP = "users";
 
     final Logger log = LoggerFactory.getLogger(this.getClass());
 

@@ -24,8 +24,9 @@ import com.pronoia.splunk.jms.activemq.internal.ActiveMqBrokerUtils;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.RedeliveryPolicy;
 
+
 /**
- *
+ * Splunk JMS Message Listener consumer specifically for ActiveMQ.
  */
 public class SplunkActiveMqMessageListener extends SplunkJmsMessageListener {
     String brokerURL;
@@ -40,9 +41,6 @@ public class SplunkActiveMqMessageListener extends SplunkJmsMessageListener {
     Long initialRedeliveryDelay = 1000L;
     Long maximumRedeliveryDelay = 60000L;
     Integer maximumRedeliveries = -1;
-
-    public SplunkActiveMqMessageListener() {
-    }
 
     public SplunkActiveMqMessageListener(String destinationName) {
         super(destinationName);

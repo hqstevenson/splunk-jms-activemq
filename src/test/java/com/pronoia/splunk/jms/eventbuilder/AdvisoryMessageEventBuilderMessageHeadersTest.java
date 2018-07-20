@@ -25,6 +25,7 @@ import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 
+
 /**
  * Tests for the JmsMessageEventBuilder with TextMessages class.
  */
@@ -48,7 +49,7 @@ public class AdvisoryMessageEventBuilderMessageHeadersTest {
     public void testBuild() throws Exception {
         // @formatter:off
         String expected =
-            "{"
+                "{"
                 + "\"host\":\"macpro.local\","
                 + "\"time\":\"1507221854753\","
                 + "\"fields\":{"

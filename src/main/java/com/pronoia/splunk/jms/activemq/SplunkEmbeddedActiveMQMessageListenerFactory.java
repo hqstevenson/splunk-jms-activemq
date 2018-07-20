@@ -16,6 +16,10 @@
  */
 package com.pronoia.splunk.jms.activemq;
 
+import com.pronoia.splunk.jms.SplunkJmsMessageListener;
+import com.pronoia.splunk.jms.activemq.internal.MessageListenerStartupTask;
+import com.pronoia.splunk.eventcollector.util.NamedThreadFactory;
+
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
@@ -24,9 +28,6 @@ import java.util.concurrent.TimeUnit;
 
 import javax.management.ObjectName;
 
-import com.pronoia.splunk.jms.SplunkJmsMessageListener;
-import com.pronoia.splunk.jms.activemq.internal.MessageListenerStartupTask;
-import com.pronoia.splunk.jms.activemq.internal.NamedThreadFactory;
 
 /**
  * Discovers ActiveMQ Brokers and queues running in the same JVM (embedded), and creates SplunkJmsMessageLister instances for the discovered queues.

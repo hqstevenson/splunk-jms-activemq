@@ -20,6 +20,7 @@ import javax.jms.Message;
 
 import com.pronoia.splunk.eventcollector.EventBuilder;
 
+
 public class CamelAdvisoryMessageEventBuilder extends AdvisoryMessageEventBuilder {
     public CamelAdvisoryMessageEventBuilder() {
         setPropertyNameReplacement("_DOT_", ".");

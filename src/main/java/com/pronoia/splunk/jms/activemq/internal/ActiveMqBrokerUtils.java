@@ -17,6 +17,7 @@
 package com.pronoia.splunk.jms.activemq.internal;
 
 import java.lang.management.ManagementFactory;
+
 import java.util.Set;
 
 import javax.management.MBeanServer;
@@ -24,10 +25,12 @@ import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
+
 import org.slf4j.Logger;
 
+
 /**
- *
+ * Utility class for ActiveMQ.
  */
 public final class ActiveMqBrokerUtils {
     public static final String BROKER_OBJECT_NAME_PATTERN_STRING = "org.apache.activemq:type=Broker,brokerName=*";
@@ -36,6 +39,13 @@ public final class ActiveMqBrokerUtils {
         // Unused - utility class
     }
 
+    /**
+     * Find the name of the running ActiveMQ broker using JMX.
+     *
+     * @param log the Logger instance for logging warnings.
+     *
+     * @return the name of the ActiveMQ Broker
+     */
     public static String findEmbeddedBrokerName(Logger log) {
         String answer = null;
 
@@ -66,6 +76,13 @@ public final class ActiveMqBrokerUtils {
         return answer;
     }
 
+    /**
+     * Create a VM-Transport URL to connect to an embedded broker.
+     *
+     * @param brokerName the name of the broker1
+     *
+     * @return the VM-Transport URL as a String
+     */
     public static String createEmbeddedBrokerURL(String brokerName) {
         if (brokerName != null && !brokerName.isEmpty()) {
             return String.format("vm://%s?create=false", brokerName);
@@ -74,10 +91,28 @@ public final class ActiveMqBrokerUtils {
         return brokerName;
     }
 
+    /**
+     * Find the VM-Transport URL for connecting to the running ActiveMQ broker using JMX.
+     *
+     * @param log the Logger instance for logging warnings.
+     *
+     * @return the VM-Transport URL as a String
+     */
     public static String findEmbeddedBrokerURL(Logger log) {
         return createEmbeddedBrokerURL(findEmbeddedBrokerName(log));
     }
 
+
+    /**
+     * Create an ActiveMQ Connection Factory.
+     *
+     * @param log the Logger instance for logging warnings.
+     * @param brokerURL the Broker URL
+     * @param userName the broker username (ignored if null or empty)
+     * @param password the password for the broker user (ignored if null or empty or if the username is null or empty)
+     *
+     * @return an ActvieMQ Connection Factory
+     */
     public static ActiveMQConnectionFactory createConnectionFactory(Logger log, String brokerURL, String userName, String password) {
         ActiveMQConnectionFactory activeMQConnectionFactory = new ActiveMQConnectionFactory();
 
@@ -85,14 +120,13 @@ public final class ActiveMqBrokerUtils {
 
         if (userName != null && !userName.isEmpty()) {
             activeMQConnectionFactory.setUserName(userName);
+            if (password != null && !password.isEmpty()) {
+                activeMQConnectionFactory.setPassword(password);
+            } else {
+                log.warn("ActiveMQ password is not specified");
+            }
         } else {
             log.warn("ActiveMQ user name is not specified");
-        }
-
-        if (password != null && !password.isEmpty()) {
-            activeMQConnectionFactory.setPassword(password);
-        } else {
-            log.warn("ActiveMQ password is not specified");
         }
 
         return activeMQConnectionFactory;

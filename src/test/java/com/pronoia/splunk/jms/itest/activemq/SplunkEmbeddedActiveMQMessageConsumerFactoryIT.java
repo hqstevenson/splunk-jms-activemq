@@ -20,15 +20,17 @@ import com.pronoia.junit.activemq.EmbeddedActiveMQBroker;
 import com.pronoia.junit.asserts.activemq.EmbeddedBrokerAssert;
 
 import com.pronoia.splunk.eventcollector.client.SimpleEventCollectorClient;
+
 import com.pronoia.splunk.jms.activemq.SplunkEmbeddedActiveMQMessageConsumerFactory;
 import com.pronoia.splunk.jms.eventbuilder.JmsMessageEventBuilder;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Tests for the  class.

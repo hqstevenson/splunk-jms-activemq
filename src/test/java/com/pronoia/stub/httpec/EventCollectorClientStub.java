@@ -19,9 +19,14 @@ package com.pronoia.stub.httpec;
 import com.pronoia.splunk.eventcollector.EventBuilder;
 import com.pronoia.splunk.eventcollector.EventCollectorClient;
 import com.pronoia.splunk.eventcollector.EventDeliveryException;
-
 import com.pronoia.splunk.jms.eventbuilder.JmsMessageEventBuilder;
 
+
+/**
+ * Simple EventCollectorClient stub for testing.
+ *
+ * TODO:  See if Mockio would work (reduce technical debt)
+ */
 public class EventCollectorClientStub implements EventCollectorClient {
     public String lastEvent;
     EventBuilder eventBuilder = new JmsMessageEventBuilder();
