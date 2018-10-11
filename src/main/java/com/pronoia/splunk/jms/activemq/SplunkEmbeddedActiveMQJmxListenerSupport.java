@@ -6,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,14 +14,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.pronoia.splunk.jms.activemq;
 
-import java.lang.management.ManagementFactory;
+import com.pronoia.splunk.eventcollector.EventBuilder;
+import com.pronoia.splunk.eventcollector.EventCollectorClient;
+import com.pronoia.splunk.eventcollector.SplunkMDCHelper;
+import com.pronoia.splunk.jms.eventbuilder.CamelJmsMessageEventBuilder;
 
+import java.lang.management.ManagementFactory;
 import java.util.Set;
 
 import javax.jms.Message;
-
 import javax.management.InstanceNotFoundException;
 import javax.management.ListenerNotFoundException;
 import javax.management.MBeanServer;
@@ -31,15 +35,7 @@ import javax.management.MalformedObjectNameException;
 import javax.management.Notification;
 import javax.management.NotificationListener;
 import javax.management.ObjectName;
-
 import javax.management.relation.MBeanServerNotificationFilter;
-
-
-import com.pronoia.splunk.eventcollector.EventBuilder;
-import com.pronoia.splunk.eventcollector.EventCollectorClient;
-import com.pronoia.splunk.eventcollector.SplunkMDCHelper;
-
-import com.pronoia.splunk.jms.eventbuilder.CamelJmsMessageEventBuilder;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -64,7 +60,7 @@ public abstract class SplunkEmbeddedActiveMQJmxListenerSupport implements Notifi
     String userName;
     String password;
 
-    boolean useRedelivery = true;
+    Boolean useRedelivery = true;
 
     Boolean useExponentialBackOff = true;
     Double backoffMultiplier = 2.0;
@@ -79,7 +75,7 @@ public abstract class SplunkEmbeddedActiveMQJmxListenerSupport implements Notifi
     EventCollectorClient splunkClient;
     EventBuilder<Message> splunkEventBuilder;
 
-    boolean listenerStarted;
+    volatile boolean listenerStarted;
 
     protected abstract void scheduleConsumerStartup(ObjectName mbeanName);
 
@@ -119,8 +115,16 @@ public abstract class SplunkEmbeddedActiveMQJmxListenerSupport implements Notifi
         this.password = password;
     }
 
-    public boolean isUseRedelivery() {
+    public boolean hasUseRedelivery() {
+        return useRedelivery != null;
+    }
+
+    public Boolean getUseRedelivery() {
         return useRedelivery;
+    }
+
+    public void setUseRedelivery(String useRedelivery) {
+        setUseRedelivery((useRedelivery != null) ? Boolean.valueOf(useRedelivery) : null);
     }
 
     public void setUseRedelivery(boolean useRedelivery) {
@@ -135,6 +139,10 @@ public abstract class SplunkEmbeddedActiveMQJmxListenerSupport implements Notifi
         return useExponentialBackOff;
     }
 
+    public void setUseExponentialBackOff(String useExponentialBackOff) {
+        setUseExponentialBackOff((useExponentialBackOff != null) ? Boolean.valueOf(useExponentialBackOff) : null);
+    }
+
     public void setUseExponentialBackOff(Boolean useExponentialBackOff) {
         this.useExponentialBackOff = useExponentialBackOff;
     }
@@ -145,6 +153,14 @@ public abstract class SplunkEmbeddedActiveMQJmxListenerSupport implements Notifi
 
     public Double getBackoffMultiplier() {
         return backoffMultiplier;
+    }
+
+    public void setBackoffMultiplier(String backoffMultiplier) {
+        try {
+            setBackoffMultiplier((backoffMultiplier != null) ? String.valueOf(backoffMultiplier) : null);
+        } catch (NumberFormatException numberFormatEx) {
+            log.warn("Invalid value {} set for backoffMultiplier - using default", backoffMultiplier, numberFormatEx);
+        }
     }
 
     public void setBackoffMultiplier(Double backoffMultiplier) {
@@ -159,6 +175,14 @@ public abstract class SplunkEmbeddedActiveMQJmxListenerSupport implements Notifi
         return initialRedeliveryDelay;
     }
 
+    public void setInitialRedeliveryDelay(String initialRedeliveryDelay) {
+        try {
+            setInitialRedeliveryDelay((initialRedeliveryDelay != null) ? Long.valueOf(initialRedeliveryDelay) : null);
+        } catch (NumberFormatException numberFormatEx) {
+            log.warn("Invalid value {} set for initialRedeliveryDelay - using default", initialRedeliveryDelay, numberFormatEx);
+        }
+    }
+
     public void setInitialRedeliveryDelay(Long initialRedeliveryDelay) {
         this.initialRedeliveryDelay = initialRedeliveryDelay;
     }
@@ -171,6 +195,14 @@ public abstract class SplunkEmbeddedActiveMQJmxListenerSupport implements Notifi
         return maximumRedeliveryDelay;
     }
 
+    public void setMaximumRedeliveryDelay(String maximumRedeliveryDelay) {
+        try {
+            setMaximumRedeliveryDelay((maximumRedeliveryDelay != null) ? Long.valueOf(maximumRedeliveryDelay) : null);
+        } catch (NumberFormatException numberFormatEx) {
+            log.warn("Invalid value {} set for maximumRedeliveryDelay - using default", maximumRedeliveryDelay, numberFormatEx);
+        }
+    }
+
     public void setMaximumRedeliveryDelay(Long maximumRedeliveryDelay) {
         this.maximumRedeliveryDelay = maximumRedeliveryDelay;
     }
@@ -181,6 +213,14 @@ public abstract class SplunkEmbeddedActiveMQJmxListenerSupport implements Notifi
 
     public Integer getMaximumRedeliveries() {
         return maximumRedeliveries;
+    }
+
+    public void setMaximumRedeliveries(String maximumRedeliveries) {
+        try {
+            setMaximumRedeliveries((maximumRedeliveries != null) ? Integer.valueOf(maximumRedeliveries) : null);
+        } catch (NumberFormatException numberFormatEx) {
+            log.warn("Invalid value {} set for maximumRedeliveries - using default", maximumRedeliveries, numberFormatEx);
+        }
     }
 
     public void setMaximumRedeliveries(Integer maximumRedeliveries) {
@@ -328,6 +368,16 @@ public abstract class SplunkEmbeddedActiveMQJmxListenerSupport implements Notifi
                 String errorMessage = String.format("Ignoring exception encountered removed NotificationListener from '%s'", MBeanServerDelegate.DELEGATE_NAME.toString());
                 log.error(errorMessage, removalEx);
             }
+        }
+    }
+
+    public synchronized void restart() {
+        stop();
+        try {
+            Thread.sleep(5000);
+            start();
+        } catch (InterruptedException interruptedEx) {
+            log.warn("Restart was interrupted - JMX NotificationListener will not be restarted", interruptedEx);
         }
     }
 

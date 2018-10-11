@@ -100,13 +100,14 @@ public class VmAuthenticationBroker extends AbstractAuthenticationBroker {
                 String connectorName = transportConnector.getName();
                 if (connectorName != null && !connectorName.isEmpty()) {
                     if (connectorName.startsWith("vm://")) {
-                        log.info("isAuthorizedVmConnection(ConnectionContext, ConnectionInfo) returning true for connectorName={}", connectorName);
+                        log.debug("isAuthorizedVmConnection(ConnectionContext, ConnectionInfo) returning true for connectorName={}", connectorName);
                         return true;
                     }
                 }
             }
         }
 
+        log.debug("isAuthorizedVmConnection(ConnectionContext, ConnectionInfo) returning false for {}", connectionContext.getBroker().getVmConnectorURI());
         return false;
     }
 }

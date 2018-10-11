@@ -16,7 +16,9 @@
  */
 package com.pronoia.splunk.jms.eventbuilder;
 
+import com.pronoia.splunk.eventcollector.EventCollectorClient;
 import com.pronoia.splunk.jms.activemq.eventbuilder.AdvisoryMessageEventBuilder;
+import com.pronoia.stub.httpec.EventCollectorClientStub;
 import com.pronoia.stub.jms.activemq.AdvisoryMessageStub;
 
 import org.junit.Before;
@@ -31,6 +33,8 @@ import static org.junit.Assert.assertEquals;
  */
 @Ignore("AdvisoryMessageEventBuilderMessageHeadersTest not yet implemented")
 public class AdvisoryMessageEventBuilderMessageHeadersTest {
+    EventCollectorClient clientStub = new EventCollectorClientStub();
+
     AdvisoryMessageEventBuilder instance;
     AdvisoryMessageStub message = new AdvisoryMessageStub();
 
@@ -72,7 +76,7 @@ public class AdvisoryMessageEventBuilderMessageHeadersTest {
 
         instance.setEventBody(message);
 
-        assertEquals(expected, instance.build());
+        assertEquals(expected, instance.build(clientStub));
     }
 
     /**

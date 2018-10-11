@@ -54,7 +54,7 @@ public class AdvisoryMessageEventBuilder extends JmsMessageEventBuilder {
                         }
                     }
                 } catch (JMSException jmsEx) {
-                    log.warn("Ingnoring exception encountered while attempting to derive AdvisoryType", jmsEx);
+                    log.warn("Innoring exception encountered while attempting to derive AdvisoryType", jmsEx);
                 }
                 if (jmsMessage instanceof ActiveMQMessage) {
                     ActiveMQMessage advisoryMessage = (ActiveMQMessage) jmsMessage;
@@ -89,26 +89,6 @@ public class AdvisoryMessageEventBuilder extends JmsMessageEventBuilder {
         answer.copyConfiguration(this);
 
         return answer;
-    }
-
-    @Override
-    public String getHostFieldValue() {
-        return super.getHostFieldValue();
-    }
-
-    @Override
-    public String getIndexFieldValue() {
-        return super.getIndexFieldValue();
-    }
-
-    @Override
-    public String getSourceFieldValue() {
-        return super.getSourceFieldValue();
-    }
-
-    @Override
-    public String getSourcetypeFieldValue() {
-        return super.getSourcetypeFieldValue();
     }
 
     @Override
