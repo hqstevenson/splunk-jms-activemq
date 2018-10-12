@@ -18,7 +18,6 @@
 package com.pronoia.splunk.jms.activemq;
 
 import java.lang.management.ManagementFactory;
-import java.util.Date;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -65,7 +64,7 @@ public class SplunkEmbeddedActiveMqConsumerRunnable extends AbstractSplunkActive
 
     public String getEmbeddedConsumerRunnableId() {
         if (embeddedConsumerRunnableId == null || embeddedConsumerRunnableId.isEmpty()) {
-            embeddedConsumerRunnableId = String.format("embedded-activemq-consumer-runnable-%d", embeddedConsumerRunnableCounter.getAndIncrement());
+            embeddedConsumerRunnableId = String.format("%s-runnable-%d", getFactoryId(), embeddedConsumerRunnableCounter.getAndIncrement());
         }
         return embeddedConsumerRunnableId;
     }
@@ -150,7 +149,7 @@ public class SplunkEmbeddedActiveMqConsumerRunnable extends AbstractSplunkActive
                                 String healthLevel = healthStatus.getLevel();
                                 switch (healthLevel) {
                                     case "WARNING":
-                                        log.warn("Health Status: {}", healthStatus);
+                                        log.debug("Health Status: {}", healthStatus);
                                         break;
                                     default:
                                         log.warn("Unknown Health Status: {}", healthStatus);
