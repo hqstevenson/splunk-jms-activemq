@@ -102,7 +102,7 @@ public class SplunkEmbeddedActiveMqConsumerRunnable extends AbstractSplunkActive
         ActiveMQConnectionFactory connectionFactory = null;
 
         if (isBrokerRunning()) {
-            connectionFactory = new ActiveMQConnectionFactory(String.format("vm://%s?create=false", getBrokerName()));
+            connectionFactory = new ActiveMQConnectionFactory(String.format("vm://%s?create=false&waitForStart=60000", getBrokerName()));
             connectionFactory.setUserName(userName);
             connectionFactory.setPassword(password);
 
