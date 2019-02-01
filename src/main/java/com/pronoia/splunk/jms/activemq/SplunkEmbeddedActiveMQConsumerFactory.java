@@ -61,6 +61,21 @@ public class SplunkEmbeddedActiveMQConsumerFactory extends SplunkEmbeddedActiveM
 
     Map<String, SplunkEmbeddedActiveMqConsumerRunnable> consumerMap = new ConcurrentHashMap<>();
 
+    Set<Integer> consumedHttpStatusCodes;
+    Set<Integer> consumedSplunkStatusCodes;
+
+    {
+        consumedHttpStatusCodes = new HashSet<>();
+        consumedHttpStatusCodes.add(200);
+
+        consumedSplunkStatusCodes = new HashSet<>();
+        consumedSplunkStatusCodes.add(0); // Success
+        consumedSplunkStatusCodes.add(5); // No Data
+        // consumedSplunkStatusCodes.add(6); // Invalid data format
+        consumedSplunkStatusCodes.add(12); // Event field is required
+        consumedSplunkStatusCodes.add(13); // Event field cannot be blank
+    }
+
     @Override
     public boolean isRunning() {
         return isListenerStarted();
@@ -216,6 +231,15 @@ public class SplunkEmbeddedActiveMQConsumerFactory extends SplunkEmbeddedActiveM
                 newConsumer.setSplunkEventBuilder(splunkEventBuilder.duplicate());
 
                 newConsumer.setSplunkClient(splunkClient);
+
+                if (hasConsumedHttpStatusCodes()) {
+                    newConsumer.setConsumedHttpStatusCodes(getConsumedHttpStatusCodes());
+                }
+
+                if (hasConsumedSplunkStatusCodes()) {
+                    newConsumer.setConsumedSplunkStatusCodes(getConsumedSplunkStatusCodes());
+                }
+
                 newConsumer.initialize();
             } else {
                 log.debug("JMS consumer startup already register for {} - ignoring", objectNameString);
@@ -307,13 +331,41 @@ public class SplunkEmbeddedActiveMQConsumerFactory extends SplunkEmbeddedActiveM
         this.delaySeconds = delaySeconds;
     }
 
-    protected SplunkMDCHelper createMdcHelper() {
-        return new EmbeddedActiveMQJmxNotificationListenerMDCHelper();
+    public boolean hasConsumedHttpStatusCodes() {
+        return consumedHttpStatusCodes != null && !consumedHttpStatusCodes.isEmpty();
     }
 
-    class EmbeddedActiveMQJmxNotificationListenerMDCHelper extends SplunkMDCHelper {
-        EmbeddedActiveMQJmxNotificationListenerMDCHelper() {
-            addEventBuilderValues(splunkEventBuilder);
+    public Set<Integer> getConsumedHttpStatusCodes() {
+        return consumedHttpStatusCodes;
+    }
+
+    public void setConsumedHttpStatusCodes(Set<Integer> consumedHttpStatusCodes) {
+        if (consumedHttpStatusCodes != null) {
+            if (this.consumedHttpStatusCodes == null) {
+                this.consumedHttpStatusCodes = new HashSet<>();
+            } else {
+                this.consumedHttpStatusCodes.clear();
+            }
+            this.consumedHttpStatusCodes.addAll(consumedHttpStatusCodes);
+        }
+    }
+
+    public boolean hasConsumedSplunkStatusCodes() {
+        return consumedSplunkStatusCodes != null && !consumedSplunkStatusCodes.isEmpty();
+    }
+
+    public Set<Integer> getConsumedSplunkStatusCodes() {
+        return consumedSplunkStatusCodes;
+    }
+
+    public void setConsumedSplunkStatusCodes(Set<Integer> consumedSplunkStatusCodes) {
+        if (consumedSplunkStatusCodes != null) {
+            if (this.consumedSplunkStatusCodes == null) {
+                this.consumedSplunkStatusCodes = new HashSet<>();
+            } else {
+                this.consumedSplunkStatusCodes.clear();
+            }
+            this.consumedSplunkStatusCodes.addAll(consumedSplunkStatusCodes);
         }
     }
 
@@ -347,6 +399,16 @@ public class SplunkEmbeddedActiveMQConsumerFactory extends SplunkEmbeddedActiveM
             } finally {
                 consumerFactoryObjectName = null;
             }
+        }
+    }
+
+    protected SplunkMDCHelper createMdcHelper() {
+        return new EmbeddedActiveMQJmxNotificationListenerMDCHelper();
+    }
+
+    class EmbeddedActiveMQJmxNotificationListenerMDCHelper extends SplunkMDCHelper {
+        EmbeddedActiveMQJmxNotificationListenerMDCHelper() {
+            addEventBuilderValues(splunkEventBuilder);
         }
     }
 
