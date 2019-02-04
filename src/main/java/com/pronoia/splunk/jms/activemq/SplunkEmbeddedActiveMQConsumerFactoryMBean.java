@@ -6,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,23 +14,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.pronoia.splunk.jms.activemq;
 
-import com.pronoia.splunk.eventcollector.SplunkMDCHelper;
-
-import java.lang.management.ManagementFactory;
 import java.util.Date;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicInteger;
-
-import javax.management.InstanceAlreadyExistsException;
-import javax.management.InstanceNotFoundException;
-import javax.management.MBeanRegistrationException;
-import javax.management.MalformedObjectNameException;
-import javax.management.NotCompliantMBeanException;
-import javax.management.ObjectName;
 
 
 /**
@@ -46,10 +36,14 @@ public interface SplunkEmbeddedActiveMQConsumerFactoryMBean {
 
     boolean isRunning();
 
+    String getSplunkClientId();
+
     String getConsumerFactoryId();
 
     void start();
+
     void stop();
+
     void restart();
 
     Long getReceiveTimeoutMillis();
@@ -58,14 +52,21 @@ public interface SplunkEmbeddedActiveMQConsumerFactoryMBean {
 
     Long getDelaySeconds();
 
+    Set<Integer> getConsumedHttpStatusCodes();
+
+    Set<Integer> getConsumedSplunkStatusCodes();
+
     Set<String> getConsumerKeys();
 
     Date getStartTime();
+
     Date getStopTime();
 
     Date getLastConsumerRegisteredTime();
+
     String getLastRegisteredConsumerKey();
 
     Date getLastConsumerUnregisteredTime();
+
     String getLastUnregisteredConsumerKey();
- }
+}

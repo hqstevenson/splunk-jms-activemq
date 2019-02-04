@@ -54,6 +54,11 @@ public class SplunkEmbeddedActiveMqConsumerRunnable extends AbstractSplunkActive
     }
 
     @Override
+    public String getSplunkClientId() {
+        return getSplunkClient().getClientId();
+    }
+
+    @Override
     public String getFactoryId() {
         return consumerFactory.getConsumerFactoryId();
     }

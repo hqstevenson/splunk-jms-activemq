@@ -71,7 +71,6 @@ public class SplunkEmbeddedActiveMQConsumerFactory extends SplunkEmbeddedActiveM
         consumedSplunkStatusCodes = new HashSet<>();
         consumedSplunkStatusCodes.add(0); // Success
         consumedSplunkStatusCodes.add(5); // No Data
-        // consumedSplunkStatusCodes.add(6); // Invalid data format
         consumedSplunkStatusCodes.add(12); // Event field is required
         consumedSplunkStatusCodes.add(13); // Event field cannot be blank
     }
@@ -102,6 +101,11 @@ public class SplunkEmbeddedActiveMQConsumerFactory extends SplunkEmbeddedActiveM
 
     public void setConsumerFactoryId(String consumerFactoryId) {
         this.consumerFactoryId = consumerFactoryId;
+    }
+
+    @Override
+    public String getSplunkClientId() {
+        return getSplunkClient().getClientId();
     }
 
     @Override
@@ -335,6 +339,7 @@ public class SplunkEmbeddedActiveMQConsumerFactory extends SplunkEmbeddedActiveM
         return consumedHttpStatusCodes != null && !consumedHttpStatusCodes.isEmpty();
     }
 
+    @Override
     public Set<Integer> getConsumedHttpStatusCodes() {
         return consumedHttpStatusCodes;
     }
@@ -354,6 +359,7 @@ public class SplunkEmbeddedActiveMQConsumerFactory extends SplunkEmbeddedActiveM
         return consumedSplunkStatusCodes != null && !consumedSplunkStatusCodes.isEmpty();
     }
 
+    @Override
     public Set<Integer> getConsumedSplunkStatusCodes() {
         return consumedSplunkStatusCodes;
     }

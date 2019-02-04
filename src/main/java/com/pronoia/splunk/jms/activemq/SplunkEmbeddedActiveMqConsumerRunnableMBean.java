@@ -1,9 +1,12 @@
 package com.pronoia.splunk.jms.activemq;
 
 import java.util.Date;
+import java.util.Set;
 
 public interface SplunkEmbeddedActiveMqConsumerRunnableMBean {
     String getFactoryId();
+
+    String getSplunkClientId();
 
     String getEmbeddedConsumerRunnableId();
 
@@ -26,6 +29,10 @@ public interface SplunkEmbeddedActiveMqConsumerRunnableMBean {
 
     long getDelaySeconds();
 
+    Set<Integer> getConsumedHttpStatusCodes();
+
+    Set<Integer> getConsumedSplunkStatusCodes();
+
     Date getConnectionStartTime();
 
     Date getLastMessageTime();
@@ -33,6 +40,11 @@ public interface SplunkEmbeddedActiveMqConsumerRunnableMBean {
     long getConsumedMessageCount();
 
     Date getConnectionStopTime();
+
+    boolean getSkipNextMessage();
+    void setSkipNextMessage(boolean skipNextMessage);
+
+    void skipNextMessage();
 
     void start();
 
